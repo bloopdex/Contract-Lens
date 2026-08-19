@@ -1,0 +1,10 @@
+[
+    {
+        "kind": "OPERATION_ADDED",
+        "location": "GET client.getAccountsById"
+    },
+    {
+        "kind": "OPERATION_REMOVED",
+        "location": "GET client.getUsersById"
+    }
+]

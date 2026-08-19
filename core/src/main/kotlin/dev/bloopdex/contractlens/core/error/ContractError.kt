@@ -117,4 +117,24 @@ sealed class ContractError(
             "CONTRACT_MISMATCH",
             "impact mapping requires both snapshots to be the same contract (old: '$oldContract', new: '$newContract')",
         )
+
+    /** The usage graph file is malformed YAML or violates the usage schema (Phase 4). */
+    class UsageInvalid(
+        detail: String,
+        cause: Throwable? = null,
+    ) : ContractError("USAGE_INVALID", "invalid usage graph: $detail", cause)
+
+    /** The usage graph declares a format version ContractLens does not support. */
+    class UsageVersionUnsupported(
+        version: String,
+    ) : ContractError("USAGE_VERSION_UNSUPPORTED", "unsupported usage graph version '$version' (supported: 1)")
+
+    /** Two usage records share the same (consumer, contract) identity. */
+    class UsageDuplicateRecord(
+        consumerId: String,
+        contract: String,
+    ) : ContractError(
+            "USAGE_DUPLICATE_RECORD",
+            "duplicate usage record for consumer '$consumerId' and contract '$contract' (merge the operations into one record)",
+        )
 }

@@ -66,14 +66,14 @@ data class DiffClassifiedReport(
     val classified: List<ClassifiedChange>,
 )
 
-private val addedKinds =
+internal val addedKinds =
     additiveKinds +
         setOf(
             ChangeKind.RESPONSE_ADDED,
             ChangeKind.REQUIRED_PROPERTY_ADDED,
         )
 
-private val removedKinds =
+internal val removedKinds =
     setOf(
         ChangeKind.OPERATION_REMOVED,
         ChangeKind.PARAMETER_REMOVED,
@@ -92,7 +92,7 @@ private fun summarize(changes: List<ContractChange>): DiffSummary =
         changed = changes.count { it.kind !in addedKinds && it.kind !in removedKinds },
     )
 
-private fun humanLine(change: ContractChange): String {
+internal fun humanLine(change: ContractChange): String {
     val from = change.from
     val to = change.to
     val delta =
@@ -228,7 +228,7 @@ class DiffCommand : BaseCommand(name = "diff") {
     }
 }
 
-private fun humanDelta(change: ContractChange): String {
+internal fun humanDelta(change: ContractChange): String {
     val from = change.from
     val to = change.to
     return when {

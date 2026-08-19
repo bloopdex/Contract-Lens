@@ -1,0 +1,6 @@
+[
+    {
+        "kind": "PROPERTY_ADDED",
+        "location": "GET client.getUsersById → request body → schema → properties.limit"
+    }
+]

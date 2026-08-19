@@ -1,0 +1,6 @@
+[
+    {
+        "kind": "OPERATION_REMOVED",
+        "location": "GET client.getHealth"
+    }
+]

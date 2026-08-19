@@ -8,7 +8,11 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.file
+import dev.bloopdex.contractlens.core.error.ContractError
+import dev.bloopdex.contractlens.core.model.ContractSurface
 import dev.bloopdex.contractlens.core.serialization.CanonicalJson
+import dev.bloopdex.contractlens.graphql.GraphQlParser
+import dev.bloopdex.contractlens.jsonschema.JsonSchemaParser
 import dev.bloopdex.contractlens.openapi.OpenApiParser
 import dev.bloopdex.contractlens.snapshot.GitIdentity
 import dev.bloopdex.contractlens.snapshot.SnapshotStore
@@ -16,9 +20,35 @@ import dev.bloopdex.contractlens.snapshot.buildSnapshot
 import kotlinx.serialization.Serializable
 import net.logstash.logback.argument.StructuredArguments
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import kotlin.io.path.toPath
+
+/** Format dispatch: --format wins; otherwise the file extension decides (GraphQL SDL only — everything else stays OpenAPI). */
+internal fun parseContractSource(
+    source: Path,
+    contractName: String,
+    format: String?,
+): ContractSurface {
+    if (format != null) {
+        return when (format) {
+            "openapi" -> OpenApiParser().parse(source, contractName)
+            "graphql" -> GraphQlParser().parse(Files.readString(source), contractName)
+            "json-schema" -> JsonSchemaParser().parse(Files.readString(source), contractName)
+            else -> throw ContractError.InvalidStructure("unknown --format '$format' (supported: openapi, graphql, json-schema)")
+        }
+    }
+    return when (
+        source.fileName
+            .toString()
+            .substringAfterLast('.', "")
+            .lowercase()
+    ) {
+        "graphql", "graphqls" -> GraphQlParser().parse(Files.readString(source), contractName)
+        else -> OpenApiParser().parse(source, contractName)
+    }
+}
 
 @Serializable
 data class SnapshotSummary(
@@ -44,6 +74,9 @@ class SnapshotCommand : BaseCommand(name = "snapshot") {
     private val store by option("--store", help = "Snapshot store directory (default: .contractlens/snapshots)")
         .file(canBeFile = false)
 
+    private val format by
+        option("--format", help = "Contract format (default: detected from the file extension; openapi | graphql | json-schema)")
+
     private val jsonOut by option("--json", help = "Machine-readable JSON summary on stdout").flag()
 
     private val log = LoggerFactory.getLogger(SnapshotCommand::class.java)
@@ -54,7 +87,7 @@ class SnapshotCommand : BaseCommand(name = "snapshot") {
         val identitySha = GitIdentity.require(sha, Path.of("").toAbsolutePath())
         val storeDir = store?.toPath() ?: Path.of(".contractlens/snapshots")
 
-        val surface = OpenApiParser().parse(source, contractName)
+        val surface = parseContractSource(source, contractName, format)
         val document =
             buildSnapshot(
                 contract = contractName,

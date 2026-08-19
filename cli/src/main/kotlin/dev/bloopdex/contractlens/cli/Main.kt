@@ -62,7 +62,16 @@ class ContractLensCommand : NoOpCliktCommand(name = "contractlens") {
 fun main(args: Array<String>) {
     val diffCommand = DiffCommand()
     val impactCommand = ImpactCommand()
-    val command = ContractLensCommand().subcommands(SnapshotCommand(), VerifyCommand(), ListCommand(), diffCommand, impactCommand)
+    val generatedDiffCommand = GeneratedDiffCommand()
+    val command =
+        ContractLensCommand().subcommands(
+            SnapshotCommand(),
+            VerifyCommand(),
+            ListCommand(),
+            diffCommand,
+            impactCommand,
+            generatedDiffCommand,
+        )
     try {
         command.parse(args)
     } catch (e: PrintHelpMessage) {
@@ -78,7 +87,7 @@ fun main(args: Array<String>) {
         System.err.println("error [INTERNAL]: ${e.message ?: e.javaClass.simpleName}")
         exitProcess(EXIT_ERROR)
     }
-    if (diffCommand.breakingFound || impactCommand.breakingFound) {
+    if (diffCommand.breakingFound || impactCommand.breakingFound || generatedDiffCommand.breakingFound) {
         exitProcess(EXIT_BREAKING)
     }
     exitProcess(EXIT_OK)

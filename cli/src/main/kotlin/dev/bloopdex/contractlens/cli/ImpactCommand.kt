@@ -59,17 +59,6 @@ data class ImpactJsonReport(
     val note: String = "unregistered consumers are not visible to ContractLens",
 )
 
-private fun humanDelta(change: ContractChange): String {
-    val from = change.from
-    val to = change.to
-    return when {
-        from != null && to != null -> " : ${from.summary} → ${to.summary}"
-        from != null -> " (was ${from.summary})"
-        to != null -> " (now ${to.summary})"
-        else -> ""
-    }
-}
-
 class ImpactCommand : BaseCommand(name = "impact") {
     override fun help(context: Context): String =
         "Map diff changes to registered consumers (impact <old-snapshot> <new-snapshot> --registry <registry.yaml>)"

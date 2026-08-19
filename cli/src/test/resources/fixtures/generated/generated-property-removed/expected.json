@@ -1,0 +1,6 @@
+[
+    {
+        "kind": "PROPERTY_REMOVED",
+        "location": "GET client.getUsersById → response return → schema → properties.email"
+    }
+]

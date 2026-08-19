@@ -14,6 +14,9 @@ dependencies {
     implementation(project(":openapi-parser"))
     implementation(project(":snapshot-store"))
     implementation(project(":registry"))
+    implementation(project(":generated-client"))
+    implementation(project(":graphql"))
+    implementation(project(":json-schema"))
 
     implementation("com.github.ajalt.clikt:clikt:5.0.3")
     implementation("org.slf4j:slf4j-api:2.0.16")
