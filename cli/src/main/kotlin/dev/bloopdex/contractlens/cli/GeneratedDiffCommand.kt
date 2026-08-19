@@ -28,6 +28,7 @@ import dev.bloopdex.contractlens.generated.GeneratedClientProjection
 import dev.bloopdex.contractlens.generated.GeneratorStyle
 import dev.bloopdex.contractlens.snapshot.parseAndVerifySnapshot
 import kotlinx.serialization.Serializable
+import net.logstash.logback.argument.StructuredArguments
 import java.nio.file.Files
 import kotlin.io.path.toPath
 
@@ -82,6 +83,7 @@ class GeneratedDiffCommand : BaseCommand(name = "generated-diff") {
                 "kotlin" -> GeneratorStyle.KOTLIN
                 else -> GeneratorStyle.JAVA
             }
+        val startedAt = System.nanoTime()
         val projectedOld = GeneratedClientProjection.project(oldDocument.surface, generatorStyle)
         val projectedNew = GeneratedClientProjection.project(newDocument.surface, generatorStyle)
         val changes = DiffEngine.diff(projectedOld, projectedNew)
@@ -93,6 +95,12 @@ class GeneratedDiffCommand : BaseCommand(name = "generated-diff") {
                 changed = changes.count { it.kind !in addedKinds && it.kind !in removedKinds },
             )
         val classification = if (classifyOut) Classifier.classify(changes, projectedOld, projectedNew) else null
+        log.info(
+            "analysis metrics",
+            StructuredArguments.kv("contract_changes_detected", summary.total),
+            StructuredArguments.kv("breaking_changes_detected", classification?.summary?.breaking ?: 0),
+            StructuredArguments.kv("analysis_duration_ms", (System.nanoTime() - startedAt) / 1_000_000.0),
+        )
         if (classification != null) {
             breakingFound = classification.summary.breaking > 0
         }

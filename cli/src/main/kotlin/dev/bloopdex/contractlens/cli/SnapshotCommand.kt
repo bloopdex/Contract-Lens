@@ -79,7 +79,6 @@ class SnapshotCommand : BaseCommand(name = "snapshot") {
 
     private val jsonOut by option("--json", help = "Machine-readable JSON summary on stdout").flag()
 
-    private val log = LoggerFactory.getLogger(SnapshotCommand::class.java)
 
     override fun runCommand() {
         val source = contract.toPath().toAbsolutePath().normalize()

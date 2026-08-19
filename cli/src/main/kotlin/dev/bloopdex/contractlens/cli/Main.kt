@@ -44,6 +44,9 @@ abstract class BaseCommand(
     /** Set by commands that classify changes; main() maps it to exit 1. */
     var breakingFound = false
 
+    /** Structured metrics (Phase 5) go through the JSON log encoder on stderr. */
+    protected val log = LoggerFactory.getLogger(javaClass)
+
     override fun run() {
         if (verbose) {
             val context = LoggerFactory.getILoggerFactory() as LoggerContext

@@ -22,6 +22,7 @@ import dev.bloopdex.contractlens.core.diff.additiveKinds
 import dev.bloopdex.contractlens.core.serialization.CanonicalJson
 import dev.bloopdex.contractlens.snapshot.parseAndVerifySnapshot
 import kotlinx.serialization.Serializable
+import net.logstash.logback.argument.StructuredArguments
 import java.nio.file.Files
 import kotlin.io.path.toPath
 
@@ -182,8 +183,15 @@ class DiffCommand : BaseCommand(name = "diff") {
         newSurface: dev.bloopdex.contractlens.core.model.ContractSurface,
         summary: DiffSummary,
     ) {
+        val startedAt = System.nanoTime()
         val classification = Classifier.classify(changes, oldSurface, newSurface)
         breakingFound = classification.summary.breaking > 0
+        log.info(
+            "analysis metrics",
+            StructuredArguments.kv("contract_changes_detected", summary.total),
+            StructuredArguments.kv("breaking_changes_detected", classification.summary.breaking),
+            StructuredArguments.kv("analysis_duration_ms", (System.nanoTime() - startedAt) / 1_000_000.0),
+        )
         if (jsonOut) {
             echo(
                 CanonicalJson.encodeToString(

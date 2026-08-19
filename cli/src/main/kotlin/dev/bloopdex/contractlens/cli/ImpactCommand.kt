@@ -31,6 +31,7 @@ import dev.bloopdex.contractlens.core.serialization.CanonicalJson
 import dev.bloopdex.contractlens.registry.RegistryParser
 import dev.bloopdex.contractlens.snapshot.parseAndVerifySnapshot
 import kotlinx.serialization.Serializable
+import net.logstash.logback.argument.StructuredArguments
 import java.nio.file.Files
 import kotlin.io.path.toPath
 
@@ -99,6 +100,7 @@ class ImpactCommand : BaseCommand(name = "impact") {
             throw ContractError.ContractMismatch(oldDocument.contract, newDocument.contract)
         }
 
+        val startedAt = System.nanoTime()
         val changes = DiffEngine.diff(oldDocument.surface, newDocument.surface)
         val classification = Classifier.classify(changes, oldDocument.surface, newDocument.surface)
         breakingFound = classification.summary.breaking > 0
@@ -116,6 +118,13 @@ class ImpactCommand : BaseCommand(name = "impact") {
                 review = classification.summary.review,
                 semver = classification.summary.semver,
             )
+        log.info(
+            "analysis metrics",
+            StructuredArguments.kv("contract_changes_detected", summary.changes),
+            StructuredArguments.kv("breaking_changes_detected", summary.breaking),
+            StructuredArguments.kv("affected_consumers", summary.affectedConsumers),
+            StructuredArguments.kv("analysis_duration_ms", (System.nanoTime() - startedAt) / 1_000_000.0),
+        )
         val registeredForContract = consumerRegistry.consumers.count { it.contract == report.contract }
 
         if (jsonOut) {
