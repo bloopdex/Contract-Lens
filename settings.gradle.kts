@@ -21,3 +21,4 @@ plugins {
 rootProject.name = "contractlens"
 
 include(":core", ":openapi-parser", ":snapshot-store", ":registry", ":generated-client", ":graphql", ":json-schema", ":cli")
+include(":benchmark")
