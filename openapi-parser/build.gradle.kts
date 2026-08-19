@@ -5,7 +5,11 @@ plugins {
 dependencies {
     api(project(":core"))
 
-    implementation("io.swagger.parser.v3:swagger-parser:2.1.27")
+    // 2.1.40: GHSA-2237-hv52-mmg9 (High) affects 2.1.15-2.1.38 — a
+    // thread-safety race in OpenAPI 3.1 parsing. ContractLens parses
+    // single-threaded, but the patched version removes the exposure
+    // entirely (Phase 5 security review; see docs/security.md).
+    implementation("io.swagger.parser.v3:swagger-parser:2.1.40")
     implementation("org.yaml:snakeyaml:2.4")
 
     testImplementation(project(":core"))

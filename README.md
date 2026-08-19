@@ -65,7 +65,16 @@ Requires a JDK 17+ (CI runs JVM 17 and 21 on Linux and Windows).
 $env:JAVA_HOME = "C:\Program Files\Java\..."   # or your JDK
 .\gradlew.bat build          # compile + ktlintCheck + full test suite
 .\gradlew.bat ktlintFormat   # auto-format
+.\gradlew.bat :cli:fuzz -PfuzzIterations=200000   # recorded fuzz sweeps
+.\gradlew.bat :core:fuzz -PfuzzIterations=200000  # classifier invariant fuzz
+.\gradlew.bat :benchmark:bench                    # performance baseline
+.\gradlew.bat koverXmlReport                      # aggregate coverage report
+.\gradlew.bat koverVerify                         # coverage gate
 ```
+
+Phase 5 hardening: `docs/benchmarks.md` (methodology + recorded
+baseline), `docs/security.md` (reviewed surfaces, findings, limits),
+`docs/coverage.md` (coverage policy and gate rationale).
 
 ## Usage
 
@@ -249,18 +258,23 @@ The content hash covers everything except `capturedAt`; modified or
 corrupted snapshots are refused loudly and never trusted. Identical
 content always produces identical bytes (determinism is pinned by tests).
 
-## Known limitations (Phase 4)
+## Known limitations (Phase 5)
 
 - Local `$ref`s only; multi-file and remote references are rejected
   with `UNSUPPORTED_REFERENCE` (open question from Phase 0).
-- Size/depth guards exist for nesting; full resource-limit hardening
-  (anchor bombs, huge documents) is Phase 5.
+- Inputs are bounded by `MAX_INPUT_BYTES` (10 MB) and per-adapter
+  depth guards; full resource-limit hardening (anchor bombs, deeper
+  adversarial cases) plus Jazzer coverage-guided fuzzing are Phase 6 CI
+  items.
 - `x-stability-level` exemptions are not implemented — the canonical
   model does not carry stability levels (Phase 1 scope).
 - Static source discovery does not exist and is out of scope for the
   core (ADR-002): consumers are only what the registry declares.
-- The usage graph is validated and parsed but not wired into
-  classification (documented Phase 4 follow-up).
+- The usage graph is validated and parsed but NOT wired into
+  classification — Phase 5 evaluated the follow-up and deferred it:
+  no real usage data exists yet (nothing records field reads), and
+  wiring against an empty dataset would be an untested heuristic.
+  Documented on the Phase 5 page.
 - Generated-client projection is convention-stable, not byte-exact;
   model TYPE names are not reported (`$ref`s resolve inline).
 - GraphQL/JSON Schema adapters are groundwork: single-file SDL,
@@ -270,6 +284,9 @@ content always produces identical bytes (determinism is pinned by tests).
 - Strict OpenAPI validation can refuse real-world dumps with undeclared
   path parameters (found on thorn-api's NestJS dump in dogfooding) —
   that is the correct loud failure; the fix belongs to the spec source.
+- Systematic dependency scanning and checksummed releases are Phase 6
+  CI items (the Phase 5 dependency spot-check is in `docs/security.md`,
+  including the swagger-parser advisory upgrade).
 - No remote configured for this repository yet — `.github/workflows/ci.yml`
   runs once the repo is pushed to a host.
 
