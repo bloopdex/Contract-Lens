@@ -30,3 +30,16 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core:5.9.1")
     testImplementation("com.github.ajalt.clikt:clikt:5.0.3")
 }
+
+// Phase 5 fuzz suites: the same fuzz tests as the normal run, with a
+// higher iteration count. `gradlew :cli:fuzz -PfuzzIterations=200000`
+// runs a recorded large sweep; findings become regression tests.
+tasks.register<Test>("fuzz") {
+    description = "Runs the parser and classifier fuzz suites with the configured iteration count"
+    group = "verification"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    systemProperty("fuzz.iterations", project.findProperty("fuzzIterations")?.toString() ?: "2000")
+    filter { includeTestsMatching("*FuzzTest") }
+    testLogging { events("failed") }
+}
