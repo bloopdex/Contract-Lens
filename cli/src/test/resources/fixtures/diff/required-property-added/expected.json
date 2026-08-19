@@ -1,0 +1,4 @@
+[
+  {"kind": "REQUIRED_PROPERTY_ADDED", "target": "SCHEMA", "location": "GET /users \u2192 response 200 \u2192 schema \u2192 items \u2192 properties.email", "from": "optional", "to": "required"},
+  {"kind": "REQUIRED_PROPERTY_ADDED", "target": "SCHEMA", "location": "GET /users/{id} \u2192 response 200 \u2192 schema \u2192 properties.email", "from": "optional", "to": "required"}
+]

@@ -1,0 +1,5 @@
+[
+  {"kind": "OPERATION_REMOVED", "target": "OPERATION", "location": "GET /health", "from": "get /health", "to": null},
+  {"kind": "CONSTRAINT_CHANGED", "target": "SCHEMA", "location": "GET /users \u2192 parameter \"limit\" (query)", "from": "minimum: 1.0", "to": "minimum: 10.0"},
+  {"kind": "PROPERTY_ADDED", "target": "SCHEMA", "location": "GET /users \u2192 response 200 \u2192 schema \u2192 items \u2192 properties.nickname", "from": null, "to": "string"}
+]

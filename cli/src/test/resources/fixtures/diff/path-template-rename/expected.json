@@ -1,0 +1,5 @@
+[
+  {"kind": "OPERATION_PATH_CHANGED", "target": "OPERATION", "location": "GET /users/{id}", "from": "/users/{id}", "to": "/users/{userId}"},
+  {"kind": "PARAMETER_REMOVED", "target": "PARAMETER", "location": "GET /users/{id} \u2192 parameter \"id\" (path)", "from": "path", "to": null},
+  {"kind": "PARAMETER_ADDED", "target": "PARAMETER", "location": "GET /users/{id} \u2192 parameter \"userId\" (path)", "from": null, "to": "path"}
+]

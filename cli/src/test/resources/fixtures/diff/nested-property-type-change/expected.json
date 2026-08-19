@@ -1,0 +1,4 @@
+[
+  {"kind": "TYPE_CHANGED", "target": "SCHEMA", "location": "GET /users \u2192 response 200 \u2192 schema \u2192 items \u2192 properties.address \u2192 properties.city", "from": "string", "to": "integer"},
+  {"kind": "TYPE_CHANGED", "target": "SCHEMA", "location": "GET /users/{id} \u2192 response 200 \u2192 schema \u2192 properties.address \u2192 properties.city", "from": "string", "to": "integer"}
+]

@@ -1,0 +1,3 @@
+[
+  {"kind": "TYPE_CHANGED", "target": "SCHEMA", "location": "GET /users \u2192 response 200 \u2192 schema \u2192 items", "from": "string", "to": "integer"}
+]

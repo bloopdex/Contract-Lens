@@ -1,0 +1,3 @@
+[
+  {"kind": "REQUEST_BODY_REQUIRED_CHANGED", "target": "REQUEST_BODY", "location": "POST /users \u2192 request body", "from": "true", "to": "false"}
+]

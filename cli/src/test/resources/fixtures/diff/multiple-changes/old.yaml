@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info: {title: Users, version: 1.0.0}
+paths:
+  /health:
+    get:
+      responses:
+        '200': {description: ok}
+  /users:
+    get:
+      parameters:
+        - {name: limit, in: query, schema: {type: integer, minimum: 1}}
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/User'}
+components:
+  schemas:
+    User:
+      type: object
+      required: [id]
+      properties:
+        id: {type: string}
+        email: {type: string}

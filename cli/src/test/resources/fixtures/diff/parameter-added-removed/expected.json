@@ -1,0 +1,4 @@
+[
+  {"kind": "PARAMETER_REMOVED", "target": "PARAMETER", "location": "GET /users \u2192 parameter \"limit\" (query)", "from": "query", "to": null},
+  {"kind": "PARAMETER_ADDED", "target": "PARAMETER", "location": "GET /users \u2192 parameter \"page\" (query)", "from": null, "to": "query"}
+]

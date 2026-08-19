@@ -1,0 +1,6 @@
+[
+  {"kind": "PROPERTY_REMOVED", "target": "SCHEMA", "location": "GET /users \u2192 response 200 \u2192 schema \u2192 items \u2192 properties.email", "from": "string", "to": null},
+  {"kind": "PROPERTY_ADDED", "target": "SCHEMA", "location": "GET /users \u2192 response 200 \u2192 schema \u2192 items \u2192 properties.name", "from": null, "to": "string"},
+  {"kind": "PROPERTY_REMOVED", "target": "SCHEMA", "location": "GET /users/{id} \u2192 response 200 \u2192 schema \u2192 properties.email", "from": "string", "to": null},
+  {"kind": "PROPERTY_ADDED", "target": "SCHEMA", "location": "GET /users/{id} \u2192 response 200 \u2192 schema \u2192 properties.name", "from": null, "to": "string"}
+]

@@ -1,0 +1,4 @@
+[
+  {"kind": "ENUM_CHANGED", "target": "SCHEMA", "location": "GET /users \u2192 response 200 \u2192 schema \u2192 items \u2192 properties.role", "from": "admin, editor, viewer", "to": "admin, viewer"},
+  {"kind": "ENUM_CHANGED", "target": "SCHEMA", "location": "GET /users/{id} \u2192 response 200 \u2192 schema \u2192 properties.role", "from": "admin, editor, viewer", "to": "admin, viewer"}
+]

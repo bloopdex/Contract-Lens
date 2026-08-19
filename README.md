@@ -4,9 +4,10 @@ Local-first API contract impact-analysis tool: detect contract changes,
 classify them as breaking / non-breaking / review, and explain which
 known consumers may be affected — before merge.
 
-**Status:** Phase 1 (Core Foundation) — parsing, canonical model, and
-snapshots only. Diffing (Phase 2), classification (Phase 2), and the
-consumer registry (Phase 3) are not implemented yet.
+**Status:** Phase 2 (Diff Engine MVP) — structural diffing between two
+snapshots is implemented. Classification verdicts (breaking / non-breaking
+/ review) and the consumer registry are NOT implemented yet — the diff
+engine reports structural facts only.
 
 ## What exists today (Phase 1)
 
@@ -18,7 +19,7 @@ consumer registry (Phase 3) are not implemented yet.
 - File-backed snapshot store (`:snapshot-store`) — snapshots keyed by
   contract + git commit SHA, content-hash verified, index rebuilt by
   directory scan on every start.
-- CLI (`:cli`) — `contractlens snapshot | verify | list` with
+- CLI (`:cli`) — `contractlens snapshot | verify | list | diff` with
   structured JSON logs on stderr.
 
 ## Module layout
@@ -53,10 +54,34 @@ $env:JAVA_HOME = "C:\Program Files\Java\..."   # or your JDK
 contractlens snapshot api/openapi.yaml
 contractlens snapshot verify .contractlens/snapshots/users@<sha>.snapshot.json
 contractlens snapshot list --store .contractlens/snapshots
+contractlens diff old.snapshot.json new.snapshot.json
+contractlens diff old.snapshot.json new.snapshot.json --json
 ```
 
-Exit codes: `0` success, `1` reserved for breaking changes (Phase 2),
-`2` operational errors (bad usage, bad input, corrupt snapshots).
+Exit codes: `0` success, `1` reserved for breaking changes (the
+classifier layer, a later phase), `2` operational errors (bad usage, bad
+input, corrupt snapshots).
+
+## `contractlens diff`
+
+Diffs two verified snapshots (integrity is never bypassed) and prints
+the deterministic structural change set:
+
+```
+old: users @ 0123...
+new: users @ 4567...
+changes: 3 (added 1, removed 1, changed 1)
+  TYPE_CHANGED GET /users → response 200 → schema → items → properties.email : string → integer
+```
+
+`--json` emits a stable `contractlens-diff` v1 report with summary
+counts and the full change list. The change taxonomy is documented in
+`core/src/main/kotlin/dev/bloopdex/contractlens/core/diff/Change.kt` —
+kinds are structural facts (operation/parameter/request/response/schema
+levels, recursive property/array/constraint/enum/nullability diffs with
+precise logical locations), and `verdict` is intentionally null until
+the classifier layer exists. Renames are never inferred: a removed
+field and an added field are two independent structural facts.
 
 ## Snapshot format (v1)
 
@@ -78,12 +103,14 @@ The content hash covers everything except `capturedAt`; modified or
 corrupted snapshots are refused loudly and never trusted. Identical
 content always produces identical bytes (determinism is pinned by tests).
 
-## Known limitations (Phase 1)
+## Known limitations (Phase 2)
 
 - Local `$ref`s only; multi-file and remote references are rejected
   with `UNSUPPORTED_REFERENCE` (open question from Phase 0).
 - Size/depth guards exist for nesting; full resource-limit hardening
   (anchor bombs, huge documents) is Phase 5.
+- Classification verdicts, consumer mapping, and rename heuristics are
+  deliberately absent — later phases.
 - No remote configured for this repository yet — `.github/workflows/ci.yml`
   runs once the repo is pushed to a host.
 

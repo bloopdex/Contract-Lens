@@ -38,13 +38,52 @@ class DiffPropertyTest :
             val leaf: Arb<SchemaNode> =
                 Arb.choice(
                     Arb.element("string", "integer", "boolean", "number").map {
-                        SchemaNode(NodeType.SCALAR, listOf(it), null, emptyMap(), emptyList(), null, emptyList(), false, null, null, false, "leaf")
+                        SchemaNode(
+                            NodeType.SCALAR,
+                            listOf(it),
+                            null,
+                            emptyMap(),
+                            emptyList(),
+                            null,
+                            emptyList(),
+                            false,
+                            null,
+                            null,
+                            false,
+                            "leaf",
+                        )
                     },
                     Arb.int(1, 10).map {
-                        SchemaNode(NodeType.ENUM, listOf("string"), null, emptyMap(), emptyList(), null, listOf("v$it"), false, null, null, false, "enum")
+                        SchemaNode(
+                            NodeType.ENUM,
+                            listOf("string"),
+                            null,
+                            emptyMap(),
+                            emptyList(),
+                            null,
+                            listOf("v$it"),
+                            false,
+                            null,
+                            null,
+                            false,
+                            "enum",
+                        )
                     },
                     Arb.boolean().map {
-                        SchemaNode(NodeType.SCALAR, listOf("string"), null, emptyMap(), emptyList(), null, emptyList(), it, null, null, false, "leaf")
+                        SchemaNode(
+                            NodeType.SCALAR,
+                            listOf("string"),
+                            null,
+                            emptyMap(),
+                            emptyList(),
+                            null,
+                            emptyList(),
+                            it,
+                            null,
+                            null,
+                            false,
+                            "leaf",
+                        )
                     },
                 )
             if (depth <= 0) return leaf
@@ -72,7 +111,20 @@ class DiffPropertyTest :
                 }
             val arrayNode: Arb<SchemaNode> =
                 leaf.map {
-                    SchemaNode(NodeType.ARRAY, listOf("array"), null, emptyMap(), emptyList(), it, emptyList(), false, null, null, false, "arr")
+                    SchemaNode(
+                        NodeType.ARRAY,
+                        listOf("array"),
+                        null,
+                        emptyMap(),
+                        emptyList(),
+                        it,
+                        emptyList(),
+                        false,
+                        null,
+                        null,
+                        false,
+                        "arr",
+                    )
                 }
             return Arb.choice(leaf, objectNode, arrayNode).map {
                 it.copy(
@@ -96,9 +148,10 @@ class DiffPropertyTest :
                     Parameter(name, locationIn, required, schema, "p.$name")
                 }
             val bodyArb: Arb<RequestBody?> =
-                Arb.bind(schemaNodeArb(1), Arb.boolean()) { schema: SchemaNode, required: Boolean ->
-                    RequestBody(required, mapOf("application/json" to schema))
-                }.orNull()
+                Arb
+                    .bind(schemaNodeArb(1), Arb.boolean()) { schema: SchemaNode, required: Boolean ->
+                        RequestBody(required, mapOf("application/json" to schema))
+                    }.orNull()
             val responseArb: Arb<Pair<String, Response>> =
                 Arb.bind(Arb.element("200", "201", "404"), schemaNodeArb(1)) { status: String, schema: SchemaNode ->
                     status to Response(mapOf("application/json" to schema), "r.$status")

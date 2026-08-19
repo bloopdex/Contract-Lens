@@ -111,7 +111,8 @@ fun inverseKind(kind: ChangeKind): ChangeKind = inverseKinds[kind] ?: kind
  * from, then to. Never depends on hash-map iteration order.
  */
 val changeOrder: Comparator<ContractChange> =
-    Comparator.comparing<ContractChange, String> { it.location }
+    Comparator
+        .comparing<ContractChange, String> { it.location }
         .thenComparing { it.kind.name }
         .thenComparing { it.from?.summary ?: "" }
         .thenComparing { it.to?.summary ?: "" }
@@ -123,39 +124,41 @@ fun explainChange(
     from: ChangeValue?,
     to: ChangeValue?,
 ): String {
-    val base = when (kind) {
-        ChangeKind.OPERATION_ADDED -> "operation was added"
-        ChangeKind.OPERATION_REMOVED -> "operation was removed"
-        ChangeKind.OPERATION_PATH_CHANGED -> "operation path template changed"
-        ChangeKind.PARAMETER_ADDED -> "parameter was added"
-        ChangeKind.PARAMETER_REMOVED -> "parameter was removed"
-        ChangeKind.PARAMETER_LOCATION_CHANGED -> "parameter location changed"
-        ChangeKind.PARAMETER_REQUIRED_CHANGED -> "parameter requiredness changed"
-        ChangeKind.PARAMETER_SCHEMA_CHANGED -> "parameter schema changed"
-        ChangeKind.REQUEST_BODY_ADDED -> "request body was added"
-        ChangeKind.REQUEST_BODY_REMOVED -> "request body was removed"
-        ChangeKind.REQUEST_BODY_REQUIRED_CHANGED -> "request body requiredness changed"
-        ChangeKind.CONTENT_TYPE_ADDED -> "content type was added"
-        ChangeKind.CONTENT_TYPE_REMOVED -> "content type was removed"
-        ChangeKind.RESPONSE_ADDED -> "response was added"
-        ChangeKind.RESPONSE_REMOVED -> "response was removed"
-        ChangeKind.PROPERTY_ADDED -> "property was added"
-        ChangeKind.PROPERTY_REMOVED -> "property was removed"
-        ChangeKind.REQUIRED_PROPERTY_ADDED -> "property became required"
-        ChangeKind.REQUIRED_PROPERTY_REMOVED -> "property is no longer required"
-        ChangeKind.TYPE_CHANGED -> "type changed"
-        ChangeKind.NULLABLE_CHANGED -> "nullability changed"
-        ChangeKind.ENUM_CHANGED -> "enum values changed"
-        ChangeKind.CONSTRAINT_CHANGED -> "constraints changed"
-        ChangeKind.REF_TARGET_CHANGED -> "reference target changed"
-        ChangeKind.DEFAULT_CHANGED -> "default presence changed"
-        ChangeKind.ITEMS_CHANGED -> "array items changed"
-    }
-    val delta = when {
-        from != null && to != null -> " from ${from.summary} to ${to.summary}"
-        from != null -> " (was ${from.summary})"
-        to != null -> " (now ${to.summary})"
-        else -> ""
-    }
+    val base =
+        when (kind) {
+            ChangeKind.OPERATION_ADDED -> "operation was added"
+            ChangeKind.OPERATION_REMOVED -> "operation was removed"
+            ChangeKind.OPERATION_PATH_CHANGED -> "operation path template changed"
+            ChangeKind.PARAMETER_ADDED -> "parameter was added"
+            ChangeKind.PARAMETER_REMOVED -> "parameter was removed"
+            ChangeKind.PARAMETER_LOCATION_CHANGED -> "parameter location changed"
+            ChangeKind.PARAMETER_REQUIRED_CHANGED -> "parameter requiredness changed"
+            ChangeKind.PARAMETER_SCHEMA_CHANGED -> "parameter schema changed"
+            ChangeKind.REQUEST_BODY_ADDED -> "request body was added"
+            ChangeKind.REQUEST_BODY_REMOVED -> "request body was removed"
+            ChangeKind.REQUEST_BODY_REQUIRED_CHANGED -> "request body requiredness changed"
+            ChangeKind.CONTENT_TYPE_ADDED -> "content type was added"
+            ChangeKind.CONTENT_TYPE_REMOVED -> "content type was removed"
+            ChangeKind.RESPONSE_ADDED -> "response was added"
+            ChangeKind.RESPONSE_REMOVED -> "response was removed"
+            ChangeKind.PROPERTY_ADDED -> "property was added"
+            ChangeKind.PROPERTY_REMOVED -> "property was removed"
+            ChangeKind.REQUIRED_PROPERTY_ADDED -> "property became required"
+            ChangeKind.REQUIRED_PROPERTY_REMOVED -> "property is no longer required"
+            ChangeKind.TYPE_CHANGED -> "type changed"
+            ChangeKind.NULLABLE_CHANGED -> "nullability changed"
+            ChangeKind.ENUM_CHANGED -> "enum values changed"
+            ChangeKind.CONSTRAINT_CHANGED -> "constraints changed"
+            ChangeKind.REF_TARGET_CHANGED -> "reference target changed"
+            ChangeKind.DEFAULT_CHANGED -> "default presence changed"
+            ChangeKind.ITEMS_CHANGED -> "array items changed"
+        }
+    val delta =
+        when {
+            from != null && to != null -> " from ${from.summary} to ${to.summary}"
+            from != null -> " (was ${from.summary})"
+            to != null -> " (now ${to.summary})"
+            else -> ""
+        }
     return "$base$delta at $location"
 }

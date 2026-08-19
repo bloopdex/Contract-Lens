@@ -1,0 +1,3 @@
+[
+  {"kind": "TYPE_CHANGED", "target": "SCHEMA", "location": "GET /users \u2192 parameter \"limit\" (query)", "from": "integer", "to": "string"}
+]

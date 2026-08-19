@@ -1,0 +1,4 @@
+[
+  {"kind": "CONTENT_TYPE_REMOVED", "target": "REQUEST_BODY", "location": "POST /users \u2192 request body (content application/json)", "from": "application/json", "to": null},
+  {"kind": "CONTENT_TYPE_ADDED", "target": "REQUEST_BODY", "location": "POST /users \u2192 request body (content application/xml)", "from": null, "to": "application/xml"}
+]

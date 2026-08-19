@@ -1,0 +1,3 @@
+[
+  {"kind": "OPERATION_REMOVED", "target": "OPERATION", "location": "GET /health", "from": "get /health", "to": null}
+]
