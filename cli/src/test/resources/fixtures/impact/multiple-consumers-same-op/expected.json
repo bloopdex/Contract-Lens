@@ -1,0 +1,32 @@
+{
+    "contract": "fixture",
+    "changeCount": 1,
+    "impactedConsumerCount": 2,
+    "mappedChanges": 2,
+    "impacts": [
+        {
+            "consumer": "OpenWA",
+            "changes": [
+                {
+                    "method": "get",
+                    "path": "/users/{id}",
+                    "kind": "PROPERTY_REMOVED",
+                    "location": "GET /users/{id} → response 200 → schema → properties.email",
+                    "reason": "consumer declares this operation"
+                }
+            ]
+        },
+        {
+            "consumer": "thornwa-frontend",
+            "changes": [
+                {
+                    "method": "get",
+                    "path": "/users/{id}",
+                    "kind": "PROPERTY_REMOVED",
+                    "location": "GET /users/{id} → response 200 → schema → properties.email",
+                    "reason": "consumer declares this operation"
+                }
+            ]
+        }
+    ]
+}

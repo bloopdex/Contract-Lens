@@ -1,0 +1,12 @@
+version: 1
+consumers:
+  - id: OpenWA
+    kind: service
+    contract: fixture
+    operations:
+      - GET /users/{id}
+  - id: thornwa-frontend
+    kind: frontend
+    contract: fixture
+    operations:
+      - GET /users/{id}

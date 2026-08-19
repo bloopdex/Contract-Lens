@@ -1,0 +1,12 @@
+version: 1
+consumers:
+  - id: new-path-consumer
+    kind: service
+    contract: fixture
+    operations:
+      - GET /accounts/{id}
+  - id: old-path-consumer
+    kind: frontend
+    contract: fixture
+    operations:
+      - GET /users/{id}

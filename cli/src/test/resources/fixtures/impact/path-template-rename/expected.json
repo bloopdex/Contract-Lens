@@ -1,0 +1,32 @@
+{
+    "contract": "fixture",
+    "changeCount": 2,
+    "impactedConsumerCount": 2,
+    "mappedChanges": 2,
+    "impacts": [
+        {
+            "consumer": "new-path-consumer",
+            "changes": [
+                {
+                    "method": "get",
+                    "path": "/accounts/{id}",
+                    "kind": "OPERATION_ADDED",
+                    "location": "GET /accounts/{id}",
+                    "reason": "consumer declares this operation"
+                }
+            ]
+        },
+        {
+            "consumer": "old-path-consumer",
+            "changes": [
+                {
+                    "method": "get",
+                    "path": "/users/{id}",
+                    "kind": "OPERATION_REMOVED",
+                    "location": "GET /users/{id}",
+                    "reason": "consumer declares this operation"
+                }
+            ]
+        }
+    ]
+}

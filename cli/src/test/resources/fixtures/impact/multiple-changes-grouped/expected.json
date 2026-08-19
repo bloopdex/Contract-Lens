@@ -1,0 +1,27 @@
+{
+    "contract": "fixture",
+    "changeCount": 2,
+    "impactedConsumerCount": 1,
+    "mappedChanges": 2,
+    "impacts": [
+        {
+            "consumer": "thornwa-frontend",
+            "changes": [
+                {
+                    "method": "get",
+                    "path": "/health",
+                    "kind": "PROPERTY_REMOVED",
+                    "location": "GET /health → response 200 → schema → properties.status",
+                    "reason": "consumer declares this contract (all operations)"
+                },
+                {
+                    "method": "get",
+                    "path": "/users/{id}",
+                    "kind": "PROPERTY_REMOVED",
+                    "location": "GET /users/{id} → response 200 → schema → properties.email",
+                    "reason": "consumer declares this contract (all operations)"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,7 @@
+version: 1
+consumers:
+  - id: other-consumer
+    kind: service
+    contract: other-api
+    operations:
+      - "*"

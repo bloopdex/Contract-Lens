@@ -1,0 +1,27 @@
+# ThornWA dogfooding registry (ContractLens Phase 3, 2026-08-19).
+#
+# The DECLARED consumers of the thorn-api contract. This file is the
+# complete registered knowledge for the dogfooding exercise — consumers
+# not listed here are invisible to ContractLens by design (honesty
+# boundary, ADR-002).
+#
+# The snapshots this registry was exercised against came from the real
+# @nestjs/swagger document of a:\ThornWA\thorn-api (82 operations),
+# dumped read-only to a temp file and normalized only in the temp copy:
+# 5 webhook operations were missing the {sessionId} path parameter
+# declaration (a thorn-api doc-quality bug found by strict validation —
+# recorded in the Phase 3 page, not fixed here).
+version: 1
+consumers:
+  - id: thornwa-frontend
+    kind: frontend
+    contract: thorn-api
+    operations:
+      - "*"
+    notes: React 19 + Vite app; hand-written API layer (no generated client)
+  - id: OpenWA
+    kind: service
+    contract: thorn-api
+    operations:
+      - "*"
+    notes: Multi-tenant WhatsApp gateway behind thorn-api

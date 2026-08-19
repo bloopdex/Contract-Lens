@@ -57,7 +57,7 @@ class ContractLensCommand : NoOpCliktCommand(name = "contractlens") {
 }
 
 fun main(args: Array<String>) {
-    val command = ContractLensCommand().subcommands(SnapshotCommand(), VerifyCommand(), ListCommand(), DiffCommand())
+    val command = ContractLensCommand().subcommands(SnapshotCommand(), VerifyCommand(), ListCommand(), DiffCommand(), ImpactCommand())
     try {
         command.parse(args)
     } catch (e: PrintHelpMessage) {

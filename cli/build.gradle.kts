@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":openapi-parser"))
     implementation(project(":snapshot-store"))
+    implementation(project(":registry"))
 
     implementation("com.github.ajalt.clikt:clikt:5.0.3")
     implementation("org.slf4j:slf4j-api:2.0.16")

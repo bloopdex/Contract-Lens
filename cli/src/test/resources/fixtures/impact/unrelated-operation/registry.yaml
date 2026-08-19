@@ -1,0 +1,7 @@
+version: 1
+consumers:
+  - id: thornwa-frontend
+    kind: frontend
+    contract: fixture
+    operations:
+      - POST /users

@@ -1,0 +1,74 @@
+{
+    "contract": "fixture",
+    "changeCount": 3,
+    "impactedConsumerCount": 2,
+    "mappedChanges": 6,
+    "impacts": [
+        {
+            "consumer": "new-path-consumer",
+            "changes": [
+                {
+                    "method": "get",
+                    "path": "/users/{id}",
+                    "kind": "OPERATION_PATH_CHANGED",
+                    "location": "GET /users/{id}",
+                    "reason": "consumer declares this operation"
+                },
+                {
+                    "method": "get",
+                    "path": "/users/{userId}",
+                    "kind": "OPERATION_PATH_CHANGED",
+                    "location": "GET /users/{id}",
+                    "reason": "consumer declares this operation"
+                },
+                {
+                    "method": "get",
+                    "path": "/users/{id}",
+                    "kind": "PARAMETER_REMOVED",
+                    "location": "GET /users/{id} → parameter \"id\" (path)",
+                    "reason": "consumer declares this operation"
+                },
+                {
+                    "method": "get",
+                    "path": "/users/{id}",
+                    "kind": "PARAMETER_ADDED",
+                    "location": "GET /users/{id} → parameter \"userId\" (path)",
+                    "reason": "consumer declares this operation"
+                }
+            ]
+        },
+        {
+            "consumer": "old-path-consumer",
+            "changes": [
+                {
+                    "method": "get",
+                    "path": "/users/{id}",
+                    "kind": "OPERATION_PATH_CHANGED",
+                    "location": "GET /users/{id}",
+                    "reason": "consumer declares this operation"
+                },
+                {
+                    "method": "get",
+                    "path": "/users/{userId}",
+                    "kind": "OPERATION_PATH_CHANGED",
+                    "location": "GET /users/{id}",
+                    "reason": "consumer declares this operation"
+                },
+                {
+                    "method": "get",
+                    "path": "/users/{id}",
+                    "kind": "PARAMETER_REMOVED",
+                    "location": "GET /users/{id} → parameter \"id\" (path)",
+                    "reason": "consumer declares this operation"
+                },
+                {
+                    "method": "get",
+                    "path": "/users/{id}",
+                    "kind": "PARAMETER_ADDED",
+                    "location": "GET /users/{id} → parameter \"userId\" (path)",
+                    "reason": "consumer declares this operation"
+                }
+            ]
+        }
+    ]
+}
