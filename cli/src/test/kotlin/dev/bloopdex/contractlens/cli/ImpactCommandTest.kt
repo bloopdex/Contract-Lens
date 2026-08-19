@@ -145,20 +145,26 @@ class ImpactCommandTest :
                 """.trimIndent(),
             )
 
-        test("the full workflow maps a change to its declared consumer") {
+        test("the full workflow maps a change to its declared consumer and classifies it") {
             val dir = Files.createTempDirectory("contractlens-impact")
             val oldSnapshot = capture(dir, specWithEmail(), "thorn-api", sha)
             val newSnapshot = capture(dir, specWithoutEmail(), "thorn-api", "e".repeat(40))
+            // A response property was removed: the classifier says
+            // breaking, which main() maps to exit 1 (the reserved code).
             val result =
                 ImpactCommand().test(
                     arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--registry", wildcardRegistry(dir).toString()),
                 )
             result.statusCode shouldBe 0
             result.stdout shouldContain "changes: 1"
+            result.stdout shouldContain "classification: 1 breaking, 0 non-breaking, 0 review"
+            result.stdout shouldContain "semver: major"
             result.stdout shouldContain "registered consumers: 1"
             result.stdout shouldContain "affected consumers: 1"
             result.stdout shouldContain "consumer thornwa-frontend (frontend)"
             result.stdout shouldContain "PROPERTY_REMOVED"
+            result.stdout shouldContain "[breaking] (major)"
+            result.stdout shouldContain "verdict: the response no longer guarantees a property consumers may read"
             result.stdout shouldContain "reason: consumer declares this operation"
             result.stdout shouldContain "note: unregistered consumers are not visible to ContractLens."
         }
@@ -174,13 +180,18 @@ class ImpactCommandTest :
             result.statusCode shouldBe 0
             val report = CanonicalJson.decodeFromString(ImpactJsonReport.serializer(), result.stdout.trim())
             report.format shouldBe "contractlens-impact"
-            report.version shouldBe 1
+            report.version shouldBe 2
             report.summary.changes shouldBe 1
             report.summary.affectedConsumers shouldBe 1
             report.summary.mappedChanges shouldBe 1
+            report.summary.breaking shouldBe 1
+            report.summary.semver shouldBe dev.bloopdex.contractlens.core.classify.SemverLevel.MAJOR
             report.changes
                 .single()
                 .kind.name shouldBe "PROPERTY_REMOVED"
+            report.classified
+                .single()
+                .verdict shouldBe dev.bloopdex.contractlens.core.classify.Verdict.BREAKING
             report.impacts
                 .single()
                 .consumer.id shouldBe "thornwa-frontend"
@@ -211,9 +222,11 @@ class ImpactCommandTest :
                 )
             result.statusCode shouldBe 0
             result.stdout shouldContain "changes: 2"
+            result.stdout shouldContain "classification: 2 breaking, 0 non-breaking, 0 review"
             result.stdout shouldContain "affected consumers: 1"
             result.stdout shouldContain "unmapped changes: 1"
             result.stdout shouldContain "OPERATION_REMOVED"
+            result.stdout shouldContain "[breaking]"
         }
 
         test("snapshots of different contracts are refused with a typed error") {

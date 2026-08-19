@@ -1,0 +1,27 @@
+{
+    "changeCount": 3,
+    "breaking": 2,
+    "nonBreaking": 1,
+    "review": 0,
+    "semver": "major",
+    "changes": [
+        {
+            "kind": "OPERATION_PATH_CHANGED",
+            "location": "GET /users/{id}",
+            "verdict": "non-breaking",
+            "semver": "patch"
+        },
+        {
+            "kind": "PARAMETER_REMOVED",
+            "location": "GET /users/{id} → parameter \"id\" (path)",
+            "verdict": "breaking",
+            "semver": "major"
+        },
+        {
+            "kind": "PARAMETER_ADDED",
+            "location": "GET /users/{id} → parameter \"userId\" (path)",
+            "verdict": "breaking",
+            "semver": "major"
+        }
+    ]
+}

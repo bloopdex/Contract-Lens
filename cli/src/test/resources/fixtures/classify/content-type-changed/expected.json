@@ -1,0 +1,21 @@
+{
+    "changeCount": 2,
+    "breaking": 1,
+    "nonBreaking": 1,
+    "review": 0,
+    "semver": "major",
+    "changes": [
+        {
+            "kind": "CONTENT_TYPE_ADDED",
+            "location": "GET /users → response 200 (content application/xml)",
+            "verdict": "non-breaking",
+            "semver": "minor"
+        },
+        {
+            "kind": "CONTENT_TYPE_REMOVED",
+            "location": "GET /users → response 200 (content text/csv)",
+            "verdict": "breaking",
+            "semver": "major"
+        }
+    ]
+}

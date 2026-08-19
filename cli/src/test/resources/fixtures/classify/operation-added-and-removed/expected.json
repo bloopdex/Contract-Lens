@@ -1,0 +1,21 @@
+{
+    "changeCount": 2,
+    "breaking": 1,
+    "nonBreaking": 1,
+    "review": 0,
+    "semver": "major",
+    "changes": [
+        {
+            "kind": "OPERATION_ADDED",
+            "location": "GET /audit",
+            "verdict": "non-breaking",
+            "semver": "minor"
+        },
+        {
+            "kind": "OPERATION_REMOVED",
+            "location": "GET /health",
+            "verdict": "breaking",
+            "semver": "major"
+        }
+    ]
+}

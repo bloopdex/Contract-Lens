@@ -1,0 +1,21 @@
+{
+    "changeCount": 2,
+    "breaking": 0,
+    "nonBreaking": 2,
+    "review": 0,
+    "semver": "patch",
+    "changes": [
+        {
+            "kind": "NULLABLE_CHANGED",
+            "location": "GET /users/{id} → response 200 → schema → properties.email",
+            "verdict": "non-breaking",
+            "semver": "patch"
+        },
+        {
+            "kind": "NULLABLE_CHANGED",
+            "location": "POST /users → request body → schema → properties.nickname",
+            "verdict": "non-breaking",
+            "semver": "patch"
+        }
+    ]
+}

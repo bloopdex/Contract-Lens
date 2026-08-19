@@ -17,6 +17,9 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
+import dev.bloopdex.contractlens.core.classify.ClassifiedChange
+import dev.bloopdex.contractlens.core.classify.Classifier
+import dev.bloopdex.contractlens.core.classify.SemverLevel
 import dev.bloopdex.contractlens.core.diff.ContractChange
 import dev.bloopdex.contractlens.core.diff.DiffEngine
 import dev.bloopdex.contractlens.core.error.ContractError
@@ -36,17 +39,22 @@ data class ImpactSummary(
     val changes: Int,
     val affectedConsumers: Int,
     val mappedChanges: Int,
+    val breaking: Int,
+    val nonBreaking: Int,
+    val review: Int,
+    val semver: SemverLevel?,
 )
 
 @Serializable
 data class ImpactJsonReport(
     val format: String = "contractlens-impact",
-    val version: Int = 1,
+    val version: Int = 2,
     val old: DiffReportIdentity,
     val new: DiffReportIdentity,
     val registry: String,
     val summary: ImpactSummary,
     val changes: List<ContractChange>,
+    val classified: List<ClassifiedChange>,
     val impacts: List<ConsumerImpact>,
     val note: String = "unregistered consumers are not visible to ContractLens",
 )
@@ -103,6 +111,9 @@ class ImpactCommand : BaseCommand(name = "impact") {
         }
 
         val changes = DiffEngine.diff(oldDocument.surface, newDocument.surface)
+        val classification = Classifier.classify(changes, oldDocument.surface, newDocument.surface)
+        breakingFound = classification.summary.breaking > 0
+        val classifiedByChange = classification.changes.associateBy { it.change.copy(verdict = null) }
         val consumerRegistry = RegistryParser.parse(Files.readString(registryPath), registryPath.toString())
         val report = ConsumerMapper.map(changes, consumerRegistry, newDocument.contract)
 
@@ -111,6 +122,10 @@ class ImpactCommand : BaseCommand(name = "impact") {
                 changes = report.changes.size,
                 affectedConsumers = report.impacts.size,
                 mappedChanges = ConsumerMapper.mappedChangeCount(report.impacts),
+                breaking = classification.summary.breaking,
+                nonBreaking = classification.summary.nonBreaking,
+                review = classification.summary.review,
+                semver = classification.summary.semver,
             )
         val registeredForContract = consumerRegistry.consumers.count { it.contract == report.contract }
 
@@ -124,6 +139,7 @@ class ImpactCommand : BaseCommand(name = "impact") {
                         registry = registryPath.toString(),
                         summary = summary,
                         changes = report.changes,
+                        classified = classification.changes,
                         impacts = report.impacts,
                     ),
                 ),
@@ -134,6 +150,8 @@ class ImpactCommand : BaseCommand(name = "impact") {
             echo("new: ${newDocument.contract} @ ${newDocument.identity.sha}")
             echo("registry: $registryPath")
             echo("changes: ${summary.changes}")
+            echo("classification: ${summary.breaking} breaking, ${summary.nonBreaking} non-breaking, ${summary.review} review")
+            echo("semver: ${summary.semver?.name?.lowercase() ?: "none"}")
             echo("registered consumers: $registeredForContract")
             echo("affected consumers: ${summary.affectedConsumers}")
             echo("mapped changes: ${summary.mappedChanges}")
@@ -143,7 +161,7 @@ class ImpactCommand : BaseCommand(name = "impact") {
                 for ((operation, impacted) in groupedByOperation(impact)) {
                     echo("  ${operation.method.uppercase()} ${operation.path}")
                     for (entry in impacted) {
-                        echo("    ${entry.change.kind} ${entry.change.location}${humanDelta(entry.change)}")
+                        echo(classifiedLine(entry.change, classifiedByChange[entry.change]))
                         echo("    reason: ${entry.reason}")
                     }
                 }
@@ -153,12 +171,29 @@ class ImpactCommand : BaseCommand(name = "impact") {
             if (unmapped.isNotEmpty()) {
                 echo("unmapped changes: ${unmapped.size}")
                 for (change in unmapped) {
-                    echo("  ${change.kind} ${change.location}")
+                    echo(classifiedLine(change, classifiedByChange[change]))
                 }
                 echo("  (no registered consumer declares these operations)")
             }
             echo("note: unregistered consumers are not visible to ContractLens.")
         }
+    }
+
+    /** One change line with its verdict and classification reason. */
+    private fun classifiedLine(
+        change: ContractChange,
+        classified: ClassifiedChange?,
+    ): String {
+        val verdict =
+            classified
+                ?.verdict
+                ?.name
+                ?.lowercase()
+                ?.replace('_', '-') ?: "unclassified"
+        val semver = classified?.semver?.name?.lowercase()
+        val line = "    ${change.kind} ${change.location}${humanDelta(change)} [$verdict]${if (semver != null) " ($semver)" else ""}"
+        val reason = classified?.reason
+        return if (reason == null) line else "$line\n    verdict: $reason"
     }
 
     /** Deterministic grouping: operations sorted by canonical identity; changes keep changeOrder. */

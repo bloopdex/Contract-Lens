@@ -1,0 +1,15 @@
+{
+    "changeCount": 1,
+    "breaking": 1,
+    "nonBreaking": 0,
+    "review": 0,
+    "semver": "major",
+    "changes": [
+        {
+            "kind": "TYPE_CHANGED",
+            "location": "GET /users/{id} → response 200 → schema → properties.email",
+            "verdict": "breaking",
+            "semver": "major"
+        }
+    ]
+}

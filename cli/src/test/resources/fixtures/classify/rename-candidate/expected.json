@@ -1,0 +1,21 @@
+{
+    "changeCount": 2,
+    "breaking": 0,
+    "nonBreaking": 0,
+    "review": 2,
+    "semver": null,
+    "changes": [
+        {
+            "kind": "PROPERTY_REMOVED",
+            "location": "GET /users/{id} → response 200 → schema → properties.email",
+            "verdict": "review",
+            "semver": null
+        },
+        {
+            "kind": "PROPERTY_ADDED",
+            "location": "GET /users/{id} → response 200 → schema → properties.emailAddress",
+            "verdict": "review",
+            "semver": null
+        }
+    ]
+}

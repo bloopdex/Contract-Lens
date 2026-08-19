@@ -12,9 +12,13 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.file
+import dev.bloopdex.contractlens.core.classify.ClassificationSummary
+import dev.bloopdex.contractlens.core.classify.ClassifiedChange
+import dev.bloopdex.contractlens.core.classify.Classifier
 import dev.bloopdex.contractlens.core.diff.ChangeKind
 import dev.bloopdex.contractlens.core.diff.ContractChange
 import dev.bloopdex.contractlens.core.diff.DiffEngine
+import dev.bloopdex.contractlens.core.diff.additiveKinds
 import dev.bloopdex.contractlens.core.serialization.CanonicalJson
 import dev.bloopdex.contractlens.snapshot.parseAndVerifySnapshot
 import kotlinx.serialization.Serializable
@@ -45,16 +49,29 @@ data class DiffReport(
     val changes: List<ContractChange>,
 )
 
+/**
+ * `contractlens-diff` v2 — the `--classify` extension: v1 fields plus
+ * the classification (verdicts, semver labels, reasons). Plain `diff`
+ * output stays exactly v1.
+ */
+@Serializable
+data class DiffClassifiedReport(
+    val format: String = "contractlens-diff",
+    val version: Int = 2,
+    val old: DiffReportIdentity,
+    val new: DiffReportIdentity,
+    val summary: DiffSummary,
+    val classification: ClassificationSummary,
+    val changes: List<ContractChange>,
+    val classified: List<ClassifiedChange>,
+)
+
 private val addedKinds =
-    setOf(
-        ChangeKind.OPERATION_ADDED,
-        ChangeKind.PARAMETER_ADDED,
-        ChangeKind.REQUEST_BODY_ADDED,
-        ChangeKind.CONTENT_TYPE_ADDED,
-        ChangeKind.RESPONSE_ADDED,
-        ChangeKind.PROPERTY_ADDED,
-        ChangeKind.REQUIRED_PROPERTY_ADDED,
-    )
+    additiveKinds +
+        setOf(
+            ChangeKind.RESPONSE_ADDED,
+            ChangeKind.REQUIRED_PROPERTY_ADDED,
+        )
 
 private val removedKinds =
     setOf(
@@ -105,6 +122,10 @@ class DiffCommand : BaseCommand(name = "diff") {
 
     private val jsonOut by option("--json", help = "Machine-readable JSON report on stdout").flag()
 
+    private val classifyOut by
+        option("--classify", help = "Classify changes with the Phase 0 ruleset (breaking / non-breaking / review); exit 1 on breaking")
+            .flag()
+
     override fun runCommand() {
         // Integrity is never bypassed: both snapshots are fully verified
         // (format version + content hash) before any diffing happens.
@@ -116,7 +137,18 @@ class DiffCommand : BaseCommand(name = "diff") {
         val changes = DiffEngine.diff(oldDocument.surface, newDocument.surface)
         val summary = summarize(changes)
 
-        if (jsonOut) {
+        if (classifyOut) {
+            runClassified(
+                oldDocument.contract,
+                oldDocument.identity.sha,
+                newDocument.contract,
+                newDocument.identity.sha,
+                changes,
+                oldDocument.surface,
+                newDocument.surface,
+                summary,
+            )
+        } else if (jsonOut) {
             echo(
                 CanonicalJson.encodeToString(
                     DiffReport.serializer(),
@@ -138,5 +170,71 @@ class DiffCommand : BaseCommand(name = "diff") {
                 changes.forEach { echo(humanLine(it)) }
             }
         }
+    }
+
+    private fun runClassified(
+        oldContract: String,
+        oldSha: String,
+        newContract: String,
+        newSha: String,
+        changes: List<ContractChange>,
+        oldSurface: dev.bloopdex.contractlens.core.model.ContractSurface,
+        newSurface: dev.bloopdex.contractlens.core.model.ContractSurface,
+        summary: DiffSummary,
+    ) {
+        val classification = Classifier.classify(changes, oldSurface, newSurface)
+        breakingFound = classification.summary.breaking > 0
+        if (jsonOut) {
+            echo(
+                CanonicalJson.encodeToString(
+                    DiffClassifiedReport.serializer(),
+                    DiffClassifiedReport(
+                        old = DiffReportIdentity(oldContract, oldSha),
+                        new = DiffReportIdentity(newContract, newSha),
+                        summary = summary,
+                        classification = classification.summary,
+                        changes = changes,
+                        classified = classification.changes,
+                    ),
+                ),
+            )
+        } else {
+            echo("old: $oldContract @ $oldSha")
+            echo("new: $newContract @ $newSha")
+            echo("changes: ${summary.total} (added ${summary.added}, removed ${summary.removed}, changed ${summary.changed})")
+            echo(
+                "classification: ${classification.summary.breaking} breaking, " +
+                    "${classification.summary.nonBreaking} non-breaking, ${classification.summary.review} review",
+            )
+            echo(
+                "semver: ${classification.summary.semver
+                    ?.name
+                    ?.lowercase() ?: "none"}",
+            )
+            if (classification.changes.isEmpty()) {
+                echo("no structural changes")
+            } else {
+                for (entry in classification.changes) {
+                    val semver = entry.semver?.name?.lowercase()
+                    echo(
+                        "  ${entry.change.kind} ${entry.change.location}${humanDelta(
+                            entry.change,
+                        )} [${entry.verdict.name.lowercase().replace('_', '-')}]${if (semver != null) " ($semver)" else ""}",
+                    )
+                    echo("    reason: ${entry.reason}")
+                }
+            }
+        }
+    }
+}
+
+private fun humanDelta(change: ContractChange): String {
+    val from = change.from
+    val to = change.to
+    return when {
+        from != null && to != null -> " : ${from.summary} → ${to.summary}"
+        from != null -> " (was ${from.summary})"
+        to != null -> " (now ${to.summary})"
+        else -> ""
     }
 }

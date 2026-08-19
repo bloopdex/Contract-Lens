@@ -1,0 +1,15 @@
+{
+    "changeCount": 1,
+    "breaking": 0,
+    "nonBreaking": 1,
+    "review": 0,
+    "semver": "minor",
+    "changes": [
+        {
+            "kind": "PROPERTY_ADDED",
+            "location": "POST /users → request body → schema → properties.nickname",
+            "verdict": "non-breaking",
+            "semver": "minor"
+        }
+    ]
+}

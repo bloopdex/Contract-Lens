@@ -1,0 +1,15 @@
+{
+    "changeCount": 1,
+    "breaking": 1,
+    "nonBreaking": 0,
+    "review": 0,
+    "semver": "major",
+    "changes": [
+        {
+            "kind": "REQUIRED_PROPERTY_ADDED",
+            "location": "POST /users → request body → schema → properties.role",
+            "verdict": "breaking",
+            "semver": "major"
+        }
+    ]
+}

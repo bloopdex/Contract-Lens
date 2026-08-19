@@ -96,4 +96,53 @@ class DiffCommandTest :
             result.statusCode shouldBe 1
             result.stderr shouldContain "no-such-snapshot.json"
         }
+
+        test("diff --classify attaches verdicts, reasons, and semver labels, and sets the breaking flag") {
+            val dir = Files.createTempDirectory("contractlens-diff")
+            val oldSnapshot = capture(dir, DIFF_OLD, "ping", shaOld)
+            val newSnapshot = capture(dir, DIFF_NEW, "ping", shaNew)
+
+            val command = DiffCommand()
+            val human = command.test(arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--classify"))
+            human.statusCode shouldBe 0
+            command.breakingFound shouldBe true
+            human.stdout shouldContain "classification: 1 breaking, 0 non-breaking, 0 review"
+            human.stdout shouldContain "semver: major"
+            human.stdout shouldContain "[breaking] (major)"
+            human.stdout shouldContain "reason: the accepted or emitted type changed"
+
+            val jsonCommand = DiffCommand()
+            val json = jsonCommand.test(arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--classify", "--json"))
+            json.statusCode shouldBe 0
+            jsonCommand.breakingFound shouldBe true
+            val report = CanonicalJson.decodeFromString(DiffClassifiedReport.serializer(), json.stdout.trim())
+            report.format shouldBe "contractlens-diff"
+            report.version shouldBe 2
+            report.classification.breaking shouldBe 1
+            report.classification.semver shouldBe dev.bloopdex.contractlens.core.classify.SemverLevel.MAJOR
+            report.classified.single().verdict shouldBe dev.bloopdex.contractlens.core.classify.Verdict.BREAKING
+            report.classified
+                .single()
+                .change.verdict shouldBe "breaking"
+        }
+
+        test("diff --classify on identical snapshots leaves the breaking flag unset") {
+            val dir = Files.createTempDirectory("contractlens-diff")
+            val oldSnapshot = capture(dir, DIFF_OLD, "ping", shaOld)
+            val command = DiffCommand()
+            val result = command.test(arrayOf(oldSnapshot.toString(), oldSnapshot.toString(), "--classify"))
+            result.statusCode shouldBe 0
+            command.breakingFound shouldBe false
+            result.stdout shouldContain "classification: 0 breaking, 0 non-breaking, 0 review"
+        }
+
+        test("plain diff output stays v1 with null verdicts (classifier never touches it)") {
+            val dir = Files.createTempDirectory("contractlens-diff")
+            val oldSnapshot = capture(dir, DIFF_OLD, "ping", shaOld)
+            val newSnapshot = capture(dir, DIFF_NEW, "ping", shaNew)
+            val json = DiffCommand().test(arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--json"))
+            val report = CanonicalJson.decodeFromString(DiffReport.serializer(), json.stdout.trim())
+            report.version shouldBe 1
+            report.changes.single().verdict shouldBe null
+        }
     })

@@ -1,0 +1,15 @@
+{
+    "changeCount": 1,
+    "breaking": 1,
+    "nonBreaking": 0,
+    "review": 0,
+    "semver": "major",
+    "changes": [
+        {
+            "kind": "PARAMETER_ADDED",
+            "location": "GET /users/{id} → parameter \"limit\" (query)",
+            "verdict": "breaking",
+            "semver": "major"
+        }
+    ]
+}

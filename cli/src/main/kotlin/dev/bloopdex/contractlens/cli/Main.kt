@@ -1,16 +1,16 @@
 // contractlens CLI entry point.
 //
 // Exit code contract (Architecture page, Phase 0):
-//   0 - success
-//   1 - RESERVED: breaking changes detected (arrives with the Phase 2
-//       diff engine; nothing produces it in Phase 1)
+//   0 - success (no breaking changes, or no classification requested)
+//   1 - breaking changes detected (produced by the Phase 4 classifier:
+//       `diff --classify` and `impact`)
 //   2 - operational/error condition (bad usage, bad input, IO errors,
 //       corrupt snapshots)
 //
 // Clikt's `parse` throws on failures without exiting, so the mapping to
 // the contract's exit codes happens here: usage errors (CliktError,
-// status 1) are remapped to 2 so the reserved code stays reserved for
-// breaking changes.
+// status 1) are remapped to 2. Commands signal breaking changes by
+// setting BaseCommand.breakingFound, which main() maps to exit 1.
 
 package dev.bloopdex.contractlens.cli
 
@@ -41,6 +41,9 @@ abstract class BaseCommand(
         option("-v", "--verbose", help = "Enable debug-level structured logs on stderr")
             .flag()
 
+    /** Set by commands that classify changes; main() maps it to exit 1. */
+    var breakingFound = false
+
     override fun run() {
         if (verbose) {
             val context = LoggerFactory.getILoggerFactory() as LoggerContext
@@ -57,14 +60,16 @@ class ContractLensCommand : NoOpCliktCommand(name = "contractlens") {
 }
 
 fun main(args: Array<String>) {
-    val command = ContractLensCommand().subcommands(SnapshotCommand(), VerifyCommand(), ListCommand(), DiffCommand(), ImpactCommand())
+    val diffCommand = DiffCommand()
+    val impactCommand = ImpactCommand()
+    val command = ContractLensCommand().subcommands(SnapshotCommand(), VerifyCommand(), ListCommand(), diffCommand, impactCommand)
     try {
         command.parse(args)
     } catch (e: PrintHelpMessage) {
         // --help: the help text has been printed; nothing to add.
     } catch (e: CliktError) {
         // Usage errors are operational: the contract reserves exit 1 for
-        // breaking changes (Phase 2). Clikt has already printed the message.
+        // breaking changes (Phase 4 classifier). Clikt has already printed the message.
         exitProcess(EXIT_ERROR)
     } catch (e: ContractError) {
         System.err.println("error [${e.code}]: ${e.message}")
@@ -72,6 +77,9 @@ fun main(args: Array<String>) {
     } catch (e: Exception) {
         System.err.println("error [INTERNAL]: ${e.message ?: e.javaClass.simpleName}")
         exitProcess(EXIT_ERROR)
+    }
+    if (diffCommand.breakingFound || impactCommand.breakingFound) {
+        exitProcess(EXIT_BREAKING)
     }
     exitProcess(EXIT_OK)
 }

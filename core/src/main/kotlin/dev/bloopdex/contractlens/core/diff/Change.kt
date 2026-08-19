@@ -106,6 +106,16 @@ internal val inverseKinds: Map<ChangeKind, ChangeKind> =
 /** The kind diff(x, y) reports for the same change seen from y vs x. */
 fun inverseKind(kind: ChangeKind): ChangeKind = inverseKinds[kind] ?: kind
 
+/** Kinds that ADD surface: the classifier's semver rule maps non-breaking changes of these kinds to minor. */
+val additiveKinds: Set<ChangeKind> =
+    setOf(
+        ChangeKind.OPERATION_ADDED,
+        ChangeKind.PARAMETER_ADDED,
+        ChangeKind.REQUEST_BODY_ADDED,
+        ChangeKind.CONTENT_TYPE_ADDED,
+        ChangeKind.PROPERTY_ADDED,
+    )
+
 /**
  * Total deterministic ordering over changes: location, then kind, then
  * from, then to. Never depends on hash-map iteration order.

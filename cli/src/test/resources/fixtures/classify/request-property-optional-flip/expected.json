@@ -1,0 +1,15 @@
+{
+    "changeCount": 1,
+    "breaking": 0,
+    "nonBreaking": 1,
+    "review": 0,
+    "semver": "patch",
+    "changes": [
+        {
+            "kind": "REQUIRED_PROPERTY_REMOVED",
+            "location": "POST /users → request body → schema → properties.name",
+            "verdict": "non-breaking",
+            "semver": "patch"
+        }
+    ]
+}

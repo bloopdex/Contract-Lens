@@ -1,0 +1,15 @@
+{
+    "changeCount": 1,
+    "breaking": 0,
+    "nonBreaking": 1,
+    "review": 0,
+    "semver": "patch",
+    "changes": [
+        {
+            "kind": "CONSTRAINT_CHANGED",
+            "location": "GET /users → response 200 → schema → properties.page",
+            "verdict": "non-breaking",
+            "semver": "patch"
+        }
+    ]
+}

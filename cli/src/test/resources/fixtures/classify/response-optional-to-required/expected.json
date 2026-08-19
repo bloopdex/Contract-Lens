@@ -1,0 +1,15 @@
+{
+    "changeCount": 1,
+    "breaking": 0,
+    "nonBreaking": 0,
+    "review": 1,
+    "semver": null,
+    "changes": [
+        {
+            "kind": "REQUIRED_PROPERTY_ADDED",
+            "location": "GET /users/{id} → response 200 → schema → properties.email",
+            "verdict": "review",
+            "semver": null
+        }
+    ]
+}

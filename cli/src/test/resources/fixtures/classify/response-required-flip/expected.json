@@ -1,0 +1,15 @@
+{
+    "changeCount": 1,
+    "breaking": 1,
+    "nonBreaking": 0,
+    "review": 0,
+    "semver": "major",
+    "changes": [
+        {
+            "kind": "REQUIRED_PROPERTY_REMOVED",
+            "location": "GET /users/{id} → response 200 → schema → properties.id",
+            "verdict": "breaking",
+            "semver": "major"
+        }
+    ]
+}
