@@ -37,7 +37,10 @@ dependencies {
 tasks.register<Test>("fuzz") {
     description = "Runs the parser and classifier fuzz suites with the configured iteration count"
     group = "verification"
-    testClassesDirs = sourceSets.test.get().output.classesDirs
+    testClassesDirs =
+        sourceSets.test
+            .get()
+            .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("fuzz.iterations", project.findProperty("fuzzIterations")?.toString() ?: "2000")
     filter { includeTestsMatching("*FuzzTest") }

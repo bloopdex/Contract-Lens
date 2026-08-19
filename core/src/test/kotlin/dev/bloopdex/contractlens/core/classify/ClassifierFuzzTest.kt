@@ -28,8 +28,18 @@ class ClassifierFuzzTest :
         test("classifier invariants hold over $iterations generated diff pairs") {
             val arb = surfaceArb()
             repeat(iterations) { index ->
-                val old = arb.sample(io.kotest.property.RandomSource.seeded(index.toLong())).value
-                val new = arb.sample(io.kotest.property.RandomSource.seeded(index.toLong() + 1)).value
+                val old =
+                    arb
+                        .sample(
+                            io.kotest.property.RandomSource
+                                .seeded(index.toLong()),
+                        ).value
+                val new =
+                    arb
+                        .sample(
+                            io.kotest.property.RandomSource
+                                .seeded(index.toLong() + 1),
+                        ).value
                 val changes = DiffEngine.diff(old, new)
 
                 // totality + ordering
@@ -45,7 +55,10 @@ class ClassifierFuzzTest :
 
                 // verdict/semver consistency
                 report.changes.forEach { entry ->
-                    entry.change.verdict shouldBe entry.verdict.name.lowercase().replace('_', '-')
+                    entry.change.verdict shouldBe
+                        entry.verdict.name
+                            .lowercase()
+                            .replace('_', '-')
                     when (entry.verdict) {
                         Verdict.REVIEW -> entry.semver shouldBe null
                         Verdict.BREAKING -> entry.semver shouldBe SemverLevel.MAJOR
@@ -69,8 +82,16 @@ class ClassifierFuzzTest :
             repeat(iterations) { index ->
                 val changes =
                     DiffEngine.diff(
-                        arb.sample(io.kotest.property.RandomSource.seeded(index.toLong())).value,
-                        arb.sample(io.kotest.property.RandomSource.seeded(index.toLong() + 1)).value,
+                        arb
+                            .sample(
+                                io.kotest.property.RandomSource
+                                    .seeded(index.toLong()),
+                            ).value,
+                        arb
+                            .sample(
+                                io.kotest.property.RandomSource
+                                    .seeded(index.toLong() + 1),
+                            ).value,
                     )
                 val report = ConsumerMapper.map(changes, registry, "test")
 
@@ -83,7 +104,11 @@ class ClassifierFuzzTest :
                 report shouldBe ConsumerMapper.map(changes, registry, "test")
                 // wildcard completeness: every engine change maps at least once
                 if (changes.isNotEmpty()) {
-                    report.impacts.single().changes.map { it.change }.toSet() shouldBe changes.toSet()
+                    report.impacts
+                        .single()
+                        .changes
+                        .map { it.change }
+                        .toSet() shouldBe changes.toSet()
                 }
             }
         }

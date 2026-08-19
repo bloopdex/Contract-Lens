@@ -26,7 +26,6 @@ import dev.bloopdex.contractlens.openapi.OpenApiParser
 import dev.bloopdex.contractlens.registry.RegistryParser
 import dev.bloopdex.contractlens.registry.UsageParser
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.shouldBe
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.name
@@ -34,8 +33,7 @@ import kotlin.random.Random
 
 private const val FUZZ_ITERATIONS_PROPERTY = "fuzz.iterations"
 
-private fun fuzzIterations(): Int =
-    (System.getProperty(FUZZ_ITERATIONS_PROPERTY) ?: "400").toInt()
+private fun fuzzIterations(): Int = (System.getProperty(FUZZ_ITERATIONS_PROPERTY) ?: "400").toInt()
 
 private val SEED_CORPUS =
     listOf(
@@ -175,7 +173,10 @@ class ParserFuzzTest :
                 val file = tempDir.resolve("input-$index.yaml")
                 Files.write(file, bytes)
 
-                fun assertControlledAndDeterministic(label: String, parse: () -> Any?) {
+                fun assertControlledAndDeterministic(
+                    label: String,
+                    parse: () -> Any?,
+                ) {
                     val first = outcomeOf(parse)
                     if (first.startsWith("CRASH")) {
                         Files.write(tempDir.resolve("fuzz-failure-$label-#$index.bin"), bytes)
@@ -184,7 +185,9 @@ class ParserFuzzTest :
                     val second = outcomeOf(parse)
                     if (first != second) {
                         Files.write(tempDir.resolve("fuzz-failure-$label-#$index.bin"), bytes)
-                        throw AssertionError("$label nondeterministic on fuzz input #$index (seed=$seed): '$first' vs '$second' (input saved to $tempDir)")
+                        throw AssertionError(
+                            "$label nondeterministic on fuzz input #$index (seed=$seed): '$first' vs '$second' (input saved to $tempDir)",
+                        )
                     }
                 }
 

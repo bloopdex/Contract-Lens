@@ -251,18 +251,22 @@ fun main() {
                 jsonSchema.parse(event, "benchmark-event")
             },
             benchmark("registry-parse-1k", "registry YAML with 1,000 consumers (parse + validate)") {
-                dev.bloopdex.contractlens.registry.RegistryParser.parse(registryYaml1k, "benchmark-registry.yaml")
+                dev.bloopdex.contractlens.registry.RegistryParser
+                    .parse(registryYaml1k, "benchmark-registry.yaml")
             },
             benchmark("snapshot-build-verify", "build + verify a snapshot of the 5k surface") {
                 val document =
                     dev.bloopdex.contractlens.snapshot.buildSnapshot(
                         contract = "benchmark-api",
                         sourcePath = null,
-                        identity = dev.bloopdex.contractlens.snapshot.SnapshotIdentity("git-commit", "c".repeat(40)),
+                        identity =
+                            dev.bloopdex.contractlens.snapshot
+                                .SnapshotIdentity("git-commit", "c".repeat(40)),
                         capturedAt = "2026-08-19T00:00:00Z",
                         surface = surfaceSmall,
                     )
-                dev.bloopdex.contractlens.snapshot.snapshotJsonBytes(document)
+                dev.bloopdex.contractlens.snapshot
+                    .snapshotJsonBytes(document)
             },
         )
 
@@ -276,7 +280,9 @@ fun main() {
     val baseline = BenchmarkBaseline(environment = environment, results = results)
 
     println("=== ContractLens Phase 5 performance baseline ===")
-    println("environment: ${environment.os} | java ${environment.javaVersion} | ${environment.availableProcessors} cpus | ${environment.maxMemoryMb} MB max heap")
+    println(
+        "environment: ${environment.os} | java ${environment.javaVersion} | ${environment.availableProcessors} cpus | ${environment.maxMemoryMb} MB max heap",
+    )
     results.forEach { result ->
         println("%-28s %-45s median %8.2f ms  (min %8.2f ms)".format(result.scenario, result.inputSize, result.medianMs, result.minMs))
     }

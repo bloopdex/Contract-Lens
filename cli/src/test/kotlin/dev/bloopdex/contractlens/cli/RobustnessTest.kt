@@ -13,14 +13,12 @@ import dev.bloopdex.contractlens.jsonschema.JsonSchemaParser
 import dev.bloopdex.contractlens.openapi.OpenApiParser
 import dev.bloopdex.contractlens.registry.RegistryParser
 import dev.bloopdex.contractlens.registry.UsageParser
-import dev.bloopdex.contractlens.snapshot.SnapshotDocument
 import dev.bloopdex.contractlens.snapshot.SnapshotIdentity
 import dev.bloopdex.contractlens.snapshot.SnapshotStore
 import dev.bloopdex.contractlens.snapshot.buildSnapshot
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Files
 import java.nio.file.Path
@@ -59,7 +57,10 @@ class RobustnessTest :
 
         val sha = "a".repeat(40)
 
-        fun tempSpec(text: String, name: String = "spec.yaml"): Path {
+        fun tempSpec(
+            text: String,
+            name: String = "spec.yaml",
+        ): Path {
             val dir = Files.createTempDirectory("contractlens-robust")
             val path = dir.resolve(name)
             path.writeText(text)
@@ -114,7 +115,9 @@ class RobustnessTest :
                     sourcePath = null,
                     identity = SnapshotIdentity(kind = "git-commit", sha = sha),
                     capturedAt = "2026-08-19T00:00:00Z",
-                    surface = dev.bloopdex.contractlens.core.model.ContractSurface("evil", "openapi", "3.0.3", emptyList()),
+                    surface =
+                        dev.bloopdex.contractlens.core.model
+                            .ContractSurface("evil", "openapi", "3.0.3", emptyList()),
                 )
             val written = store.save(document)
             written.parent shouldBe dir
@@ -141,7 +144,9 @@ class RobustnessTest :
             val spec = dir.resolve("secretful.yaml")
             spec.writeText(SPEC_WITH_SECRETS)
             val modified = dir.resolve("secretful2.yaml")
-            modified.writeText(SPEC_WITH_SECRETS.replace("type: string", "type: integer").replace("example: $SECRET_MARKER", "example: replaced"))
+            modified.writeText(
+                SPEC_WITH_SECRETS.replace("type: string", "type: integer").replace("example: $SECRET_MARKER", "example: replaced"),
+            )
             val storeDir = dir.resolve("store")
             val registryFile = dir.resolve("registry.yaml")
             registryFile.writeText("version: 1\nconsumers: []\n")
@@ -161,7 +166,10 @@ class RobustnessTest :
             val diff = DiffCommand().test(arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--classify"))
             diff.stdout shouldNotContain SECRET_MARKER
 
-            val impact = ImpactCommand().test(arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--registry", registryFile.toString()))
+            val impact =
+                ImpactCommand().test(
+                    arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--registry", registryFile.toString()),
+                )
             impact.stdout shouldNotContain SECRET_MARKER
         }
     })

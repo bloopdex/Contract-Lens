@@ -19,7 +19,6 @@ import dev.bloopdex.contractlens.snapshot.SnapshotStore
 import dev.bloopdex.contractlens.snapshot.buildSnapshot
 import kotlinx.serialization.Serializable
 import net.logstash.logback.argument.StructuredArguments
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
@@ -78,7 +77,6 @@ class SnapshotCommand : BaseCommand(name = "snapshot") {
         option("--format", help = "Contract format (default: detected from the file extension; openapi | graphql | json-schema)")
 
     private val jsonOut by option("--json", help = "Machine-readable JSON summary on stdout").flag()
-
 
     override fun runCommand() {
         val source = contract.toPath().toAbsolutePath().normalize()
