@@ -9,21 +9,17 @@
 package dev.bloopdex.contractlens.core.serialization
 
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 
-val CanonicalJson = Json {
-    encodeDefaults = true
-    prettyPrint = false
-    ignoreUnknownKeys = false
-    explicitNulls = true
-}
+val CanonicalJson =
+    Json {
+        encodeDefaults = true
+        prettyPrint = false
+        ignoreUnknownKeys = false
+        explicitNulls = true
+    }
 
 /** Serialize `value` to its canonical byte form. */
-fun <T> canonicalJsonBytes(value: T): ByteArray {
-    val strategy = serializer(value::class)
-    return CanonicalJson.encodeToString(strategy, value).encodeToByteArray()
-}
+inline fun <reified T> canonicalJsonBytes(value: T): ByteArray = CanonicalJson.encodeToString(value).encodeToByteArray()
 
 /** Deserialize canonical bytes back into `T`. */
-fun <T> parseCanonicalJson(bytes: ByteArray, type: kotlin.reflect.KClass<T>): T =
-    CanonicalJson.decodeFromString(serializer(type), bytes.decodeToString())
+inline fun <reified T> parseCanonicalJson(bytes: ByteArray): T = CanonicalJson.decodeFromString(bytes.decodeToString())

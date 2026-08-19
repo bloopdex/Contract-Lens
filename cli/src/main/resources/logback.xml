@@ -1,7 +1,7 @@
 <configuration>
   <!-- Structured JSON logs go to stderr, never stdout (stdout carries
        command output and machine-readable summaries). Level defaults to
-       WARN (quiet); CONTRACTLENS_LOG or --verbose raise it. -->
+       WARN (quiet); CONTRACTLENS_LOG or the verbose flag raise it. -->
   <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
     <target>System.err</target>
     <encoder class="net.logstash.logback.encoder.LogstashEncoder">

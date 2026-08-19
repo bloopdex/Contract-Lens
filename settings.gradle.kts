@@ -6,6 +6,12 @@
 //
 // Dependency direction is strictly inward: cli -> snapshot-store -> core,
 // cli -> openapi-parser -> core. Modules never depend upward.
+plugins {
+    // Auto-provisions the JDK 17 toolchain on machines that don't have it
+    // (CI installs 17/21 explicitly via setup-java).
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+}
+
 rootProject.name = "contractlens"
 
 include(":core", ":openapi-parser", ":snapshot-store", ":cli")

@@ -24,10 +24,9 @@ data class IndexEntrySummary(
     val error: String? = null,
 )
 
-class ListCommand : BaseCommand(
-    name = "list",
-    help = "List snapshots in the store (rebuilt index)",
-) {
+class ListCommand : BaseCommand(name = "list") {
+    override fun help(context: com.github.ajalt.clikt.core.Context): String = "List snapshots in the store (rebuilt index)"
+
     private val store by option("--store", help = "Snapshot store directory (default: .contractlens/snapshots)")
         .file(canBeFile = false)
 
@@ -38,11 +37,11 @@ class ListCommand : BaseCommand(
         val entries = SnapshotStore(storeDir).list()
 
         if (entries.isEmpty()) {
-            println("no snapshots in ${storeDir.toAbsolutePath()}")
+            echo("no snapshots in ${storeDir.toAbsolutePath()}")
             return
         }
         if (jsonOut) {
-            println(
+            echo(
                 CanonicalJson.encodeToString(
                     IndexEntryListSerializer,
                     entries.map {
@@ -52,15 +51,20 @@ class ListCommand : BaseCommand(
                             path = it.path.toString(),
                             error = it.error,
                         )
-                    }
-                )
+                    },
+                ),
             )
         } else {
             entries.forEach {
                 if (it.error != null) {
-                    println("CORRUPT ${it.contract}@${it.sha} - ${it.error}")
+                    echo("CORRUPT ${it.contract}@${it.sha} - ${it.error}")
                 } else {
-                    println("OK      ${it.contract}@${it.sha} (${it.document?.surface?.operations?.size ?: 0} operations)")
+                    echo(
+                        "OK      ${it.contract}@${it.sha} (${it.document
+                            ?.surface
+                            ?.operations
+                            ?.size ?: 0} operations)",
+                    )
                 }
             }
         }

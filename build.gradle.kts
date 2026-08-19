@@ -16,13 +16,18 @@ allprojects {
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
 
+    // Pin the ktlint CLI: the plugin's bundled default (1.0.x) ships an
+    // old parser that rejects constructs accepted by Kotlin 2.x.
+    extensions.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        version.set("1.6.0")
+    }
+
     plugins.withId("org.jetbrains.kotlin.jvm") {
         extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
-            compilerOptions {
-                // CI runs on JVM 17 and 21; the bytecode target stays on 17.
-                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-                freeCompilerArgs.add("-Xjdk-release=17")
-            }
+            // CI runs on JVM 17 and 21; the bytecode target stays on 17.
+            // The toolchain aligns compileJava and compileKotlin targets
+            // (the JVM-target validation would otherwise fail the build).
+            jvmToolchain(17)
         }
     }
 

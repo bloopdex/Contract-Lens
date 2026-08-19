@@ -7,15 +7,24 @@
 //   2 - operational/error condition (bad usage, bad input, IO errors,
 //       corrupt snapshots)
 //
-// Clikt reports usage errors as status 1; they are remapped to 2 so the
-// reserved code stays reserved for breaking changes.
+// Clikt's `parse` throws on failures without exiting, so the mapping to
+// the contract's exit codes happens here: usage errors (CliktError,
+// status 1) are remapped to 2 so the reserved code stays reserved for
+// breaking changes.
 
 package dev.bloopdex.contractlens.cli
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.LoggerContext
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.CliktError
+import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.core.NoOpCliktCommand
+import com.github.ajalt.clikt.core.PrintHelpMessage
+import com.github.ajalt.clikt.core.parse
 import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.option
 import dev.bloopdex.contractlens.core.error.ContractError
 import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess
@@ -25,8 +34,12 @@ const val EXIT_BREAKING = 1
 const val EXIT_ERROR = 2
 
 /** Base command: --verbose turns on debug-level structured logging (stderr). */
-abstract class BaseCommand(name: String, help: String) : CliktCommand(name = name, help = help) {
-    private val verbose by option("-v", "--verbose", help = "Enable debug-level structured logs on stderr").flag()
+abstract class BaseCommand(
+    name: String,
+) : CliktCommand(name = name) {
+    private val verbose by
+        option("-v", "--verbose", help = "Enable debug-level structured logs on stderr")
+            .flag()
 
     override fun run() {
         if (verbose) {
@@ -39,23 +52,26 @@ abstract class BaseCommand(name: String, help: String) : CliktCommand(name = nam
     abstract fun runCommand()
 }
 
-class Main : CliktCommand(name = "contractlens") {
-    override fun run() = Unit
+class ContractLensCommand : NoOpCliktCommand(name = "contractlens") {
+    override fun help(context: Context): String = "Local-first API contract impact analysis"
 }
 
 fun main(args: Array<String>) {
-    val command = Main().subcommands(SnapshotCommand(), VerifyCommand(), ListCommand())
-    val status = try {
-        command.main(args)
+    val command = ContractLensCommand().subcommands(SnapshotCommand(), VerifyCommand(), ListCommand())
+    try {
+        command.parse(args)
+    } catch (e: PrintHelpMessage) {
+        // --help: the help text has been printed; nothing to add.
+    } catch (e: CliktError) {
+        // Usage errors are operational: the contract reserves exit 1 for
+        // breaking changes (Phase 2). Clikt has already printed the message.
+        exitProcess(EXIT_ERROR)
     } catch (e: ContractError) {
         System.err.println("error [${e.code}]: ${e.message}")
-        EXIT_ERROR
+        exitProcess(EXIT_ERROR)
     } catch (e: Exception) {
         System.err.println("error [INTERNAL]: ${e.message ?: e.javaClass.simpleName}")
-        EXIT_ERROR
+        exitProcess(EXIT_ERROR)
     }
-    // Clikt usage errors arrive as 1; the contract reserves 1 for
-    // breaking changes (Phase 2), so usage errors are operational.
-    val mapped = if (status == EXIT_BREAKING) EXIT_ERROR else status
-    if (mapped != EXIT_OK) exitProcess(mapped)
+    exitProcess(EXIT_OK)
 }

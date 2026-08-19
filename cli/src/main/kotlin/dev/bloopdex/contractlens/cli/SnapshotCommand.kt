@@ -18,7 +18,6 @@ import net.logstash.logback.argument.StructuredArguments
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.time.Instant
-import kotlin.io.path.absolute
 import kotlin.io.path.toPath
 
 @Serializable
@@ -30,10 +29,9 @@ data class SnapshotSummary(
     val contentHash: String,
 )
 
-class SnapshotCommand : BaseCommand(
-    name = "snapshot",
-    help = "Capture an OpenAPI 3.0/3.1 contract into a snapshot",
-) {
+class SnapshotCommand : BaseCommand(name = "snapshot") {
+    override fun help(context: com.github.ajalt.clikt.core.Context): String = "Capture an OpenAPI 3.0/3.1 contract into a snapshot"
+
     private val contract by argument(
         name = "contract",
         help = "Path to an OpenAPI 3.0/3.1 document (YAML or JSON)",
@@ -57,13 +55,16 @@ class SnapshotCommand : BaseCommand(
         val storeDir = store?.toPath() ?: Path.of(".contractlens/snapshots")
 
         val surface = OpenApiParser().parse(source, contractName)
-        val document = buildSnapshot(
-            contract = contractName,
-            sourcePath = source.toString(),
-            identity = dev.bloopdex.contractlens.snapshot.SnapshotIdentity(kind = "git-commit", sha = identitySha),
-            capturedAt = Instant.now().toString(),
-            surface = surface,
-        )
+        val document =
+            buildSnapshot(
+                contract = contractName,
+                sourcePath = source.toString(),
+                identity =
+                    dev.bloopdex.contractlens.snapshot
+                        .SnapshotIdentity(kind = "git-commit", sha = identitySha),
+                capturedAt = Instant.now().toString(),
+                surface = surface,
+            )
         val written = SnapshotStore(storeDir).save(document)
 
         log.debug(
@@ -75,7 +76,7 @@ class SnapshotCommand : BaseCommand(
         )
 
         if (jsonOut) {
-            println(
+            echo(
                 CanonicalJson.encodeToString(
                     SnapshotSummary.serializer(),
                     SnapshotSummary(
@@ -84,12 +85,12 @@ class SnapshotCommand : BaseCommand(
                         path = written.toString(),
                         operations = surface.operations.size,
                         contentHash = document.contentHash,
-                    )
-                )
+                    ),
+                ),
             )
         } else {
-            println("snapshot: ${written.toAbsolutePath()}")
-            println("contract: $contractName @ $identitySha (${surface.operations.size} operations)")
+            echo("snapshot: ${written.toAbsolutePath()}")
+            echo("contract: $contractName @ $identitySha (${surface.operations.size} operations)")
         }
     }
 }

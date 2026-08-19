@@ -12,7 +12,6 @@ import dev.bloopdex.contractlens.core.serialization.CanonicalJson
 import dev.bloopdex.contractlens.snapshot.parseAndVerifySnapshot
 import kotlinx.serialization.Serializable
 import java.nio.file.Files
-import kotlin.io.path.absolute
 import kotlin.io.path.toPath
 
 @Serializable
@@ -23,10 +22,10 @@ data class VerifySummary(
     val verified: Boolean = true,
 )
 
-class VerifyCommand : BaseCommand(
-    name = "verify",
-    help = "Verify a snapshot's integrity (format version + content hash)",
-) {
+class VerifyCommand : BaseCommand(name = "verify") {
+    override fun help(context: com.github.ajalt.clikt.core.Context): String =
+        "Verify a snapshot's integrity (format version + content hash)"
+
     private val snapshot by argument(
         name = "snapshot",
         help = "Path to a .snapshot.json file",
@@ -39,16 +38,16 @@ class VerifyCommand : BaseCommand(
         val document = parseAndVerifySnapshot(Files.readAllBytes(path), path.toString())
 
         if (jsonOut) {
-            println(
+            echo(
                 CanonicalJson.encodeToString(
                     VerifySummary.serializer(),
                     VerifySummary(contract = document.contract, sha = document.identity.sha, path = path.toString()),
-                )
+                ),
             )
         } else {
-            println("verified: ${document.contract} @ ${document.identity.sha}")
-            println("hash:     ${document.contentHash}")
-            println("captured: ${document.capturedAt ?: "unknown"}")
+            echo("verified: ${document.contract} @ ${document.identity.sha}")
+            echo("hash:     ${document.contentHash}")
+            echo("captured: ${document.capturedAt ?: "unknown"}")
         }
     }
 }

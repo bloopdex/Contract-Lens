@@ -49,17 +49,18 @@ fun contentHashOf(
     sourcePath: String?,
     identity: SnapshotIdentity,
     surface: ContractSurface,
-): String = sha256Hex(
-    canonicalJsonBytes(
-        HashEnvelope(
-            formatVersion = SNAPSHOT_FORMAT_VERSION,
-            contract = contract,
-            sourcePath = sourcePath,
-            identity = identity,
-            surface = surface.canonical(),
-        )
+): String =
+    sha256Hex(
+        canonicalJsonBytes(
+            HashEnvelope(
+                formatVersion = SNAPSHOT_FORMAT_VERSION,
+                contract = contract,
+                sourcePath = sourcePath,
+                identity = identity,
+                surface = surface.canonical(),
+            ),
+        ),
     )
-)
 
 fun buildSnapshot(
     contract: String,
@@ -67,29 +68,34 @@ fun buildSnapshot(
     identity: SnapshotIdentity,
     capturedAt: String,
     surface: ContractSurface,
-): SnapshotDocument = SnapshotDocument(
-    formatVersion = SNAPSHOT_FORMAT_VERSION,
-    contract = contract,
-    sourcePath = sourcePath,
-    identity = identity,
-    capturedAt = capturedAt,
-    contentHash = contentHashOf(contract, sourcePath, identity, surface),
-    surface = surface,
-)
+): SnapshotDocument =
+    SnapshotDocument(
+        formatVersion = SNAPSHOT_FORMAT_VERSION,
+        contract = contract,
+        sourcePath = sourcePath,
+        identity = identity,
+        capturedAt = capturedAt,
+        contentHash = contentHashOf(contract, sourcePath, identity, surface),
+        surface = surface,
+    )
 
 /** Serialize a snapshot to its canonical byte form. */
 fun snapshotJsonBytes(document: SnapshotDocument): ByteArray = canonicalJsonBytes(document)
 
 /** Parse snapshot bytes and verify integrity (format + content hash). */
-fun parseAndVerifySnapshot(bytes: ByteArray, origin: String): SnapshotDocument {
-    val document = try {
-        CanonicalJson.decodeFromString(SnapshotDocument.serializer(), bytes.decodeToString())
-    } catch (e: Exception) {
-        throw ContractError.InvalidSnapshot("cannot parse snapshot document ($origin): ${e.message}", e)
-    }
+fun parseAndVerifySnapshot(
+    bytes: ByteArray,
+    origin: String,
+): SnapshotDocument {
+    val document =
+        try {
+            CanonicalJson.decodeFromString(SnapshotDocument.serializer(), bytes.decodeToString())
+        } catch (e: Exception) {
+            throw ContractError.InvalidSnapshot("cannot parse snapshot document ($origin): ${e.message}", e)
+        }
     if (document.formatVersion != SNAPSHOT_FORMAT_VERSION) {
         throw ContractError.InvalidSnapshot(
-            "unsupported snapshot format version ${document.formatVersion} (supported: $SNAPSHOT_FORMAT_VERSION) in $origin"
+            "unsupported snapshot format version ${document.formatVersion} (supported: $SNAPSHOT_FORMAT_VERSION) in $origin",
         )
     }
     val expected = contentHashOf(document.contract, document.sourcePath, document.identity, document.surface)

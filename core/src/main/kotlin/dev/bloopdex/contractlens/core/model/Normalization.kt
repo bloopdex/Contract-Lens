@@ -14,8 +14,14 @@ fun pathIdentity(pathTemplate: String): String {
     var inParam = false
     for (c in pathTemplate) {
         when {
-            c == '{' -> { inParam = true; sb.append('{') }
-            c == '}' && inParam -> { inParam = false; sb.append('}') }
+            c == '{' -> {
+                inParam = true
+                sb.append('{')
+            }
+            c == '}' && inParam -> {
+                inParam = false
+                sb.append('}')
+            }
             !inParam -> sb.append(c)
         }
     }
@@ -28,13 +34,21 @@ fun pathIdentity(pathTemplate: String): String {
  */
 fun normalizeStatusKey(status: String): String = status.lowercase()
 
-/** Total ordering for operations: path identity first, then method. */
+/**
+ * Total ordering for operations: path identity first, then method, then
+ * the raw path template. The raw-path tiebreak makes the order TOTAL
+ * (two templates like /users/{id} and /users/{userId} share an identity
+ * and a method), which keeps canonical() a stable, deterministic rebuild.
+ */
 val operationOrder: Comparator<Operation> =
-    Comparator.comparing<Operation, String> { it.pathIdentity }.thenComparing { it.method }
+    Comparator
+        .comparing<Operation, String> { it.pathIdentity }
+        .thenComparing { it.method }
+        .thenComparing { it.path }
 
 /** Deterministic method ordering used when sorting within one operation set. */
 val methodOrder: Comparator<String> = naturalOrder()
 
 /** Total ordering for parameters: location (`in`) first, then name. */
 val parameterOrder: Comparator<Parameter> =
-    Comparator.comparing<Parameter, String> { it.`in` }.thenComparing { it.name }
+    compareBy(Parameter::`in`).thenBy(Parameter::name)

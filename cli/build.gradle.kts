@@ -6,6 +6,7 @@ plugins {
 
 application {
     mainClass.set("dev.bloopdex.contractlens.cli.MainKt")
+    applicationName = "contractlens"
 }
 
 dependencies {

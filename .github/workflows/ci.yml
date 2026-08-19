@@ -1,0 +1,36 @@
+# Basic CI for ContractLens (Phase 1): build + ktlint + full test suite
+# on the two supported JVM versions and both runner OSes.
+#
+# NOTE: this workflow only executes once the repository is pushed to a
+# GitHub host — no remote is configured yet (hosting decision is an open
+# BloopLab item, see the README's known limitations).
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        java: [17, 21]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build, lint, and test
+        run: ./gradlew build --console=plain

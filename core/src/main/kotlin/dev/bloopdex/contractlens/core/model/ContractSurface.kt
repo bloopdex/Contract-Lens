@@ -51,11 +51,12 @@ data class Operation(
     /** e.g. paths./users/{id}.get */
     val location: String,
 ) {
-    fun canonical(): Operation = copy(
-        parameters = parameters.map { it.canonical() }.sortedWith(compareBy({ it.in }, { it.name })),
-        requestBody = requestBody?.canonical(),
-        responses = responses.toSortedMap().mapValues { it.value.canonical() },
-    )
+    fun canonical(): Operation =
+        copy(
+            parameters = parameters.map { it.canonical() }.sortedWith(compareBy(Parameter::`in`).thenBy(Parameter::name)),
+            requestBody = requestBody?.canonical(),
+            responses = responses.toSortedMap().mapValues { it.value.canonical() },
+        )
 }
 
 @Serializable
@@ -125,10 +126,11 @@ data class SchemaNode(
     val defaultPresent: Boolean,
     val location: String,
 ) {
-    fun canonical(): SchemaNode = copy(
-        types = types.sorted(),
-        properties = properties.toSortedMap().mapValues { it.value.canonical() },
-        required = required.sorted().distinct(),
-        items = items?.canonical(),
-    )
+    fun canonical(): SchemaNode =
+        copy(
+            types = types.sorted(),
+            properties = properties.toSortedMap().mapValues { it.value.canonical() },
+            required = required.sorted().distinct(),
+            items = items?.canonical(),
+        )
 }

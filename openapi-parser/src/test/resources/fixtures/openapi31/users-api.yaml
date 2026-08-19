@@ -13,6 +13,7 @@ paths:
             exclusiveMinimum: 0
       responses:
         '200':
+          description: ok
           content:
             application/json:
               schema:
@@ -28,6 +29,7 @@ paths:
               $ref: '#/components/schemas/NewUser'
       responses:
         '201':
+          description: created
           content:
             application/json:
               schema:
