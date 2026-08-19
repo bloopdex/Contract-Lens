@@ -18,6 +18,15 @@ sealed class ContractError(
         path: String,
     ) : ContractError("FILE_NOT_FOUND", "file not found: $path")
 
+    /** The input exceeds the resource limit; rejected before parsing (Phase 5). */
+    class InputTooLarge(
+        source: String,
+        size: Long,
+    ) : ContractError(
+            "INPUT_TOO_LARGE",
+            "input too large: $source is $size bytes (limit: ${MAX_INPUT_BYTES / (1024 * 1024)} MB)",
+        )
+
     /** The source file exists but cannot be read. */
     class UnreadableFile(
         path: String,

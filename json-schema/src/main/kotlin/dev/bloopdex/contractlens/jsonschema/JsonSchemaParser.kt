@@ -25,6 +25,7 @@
 package dev.bloopdex.contractlens.jsonschema
 
 import dev.bloopdex.contractlens.core.error.ContractError
+import dev.bloopdex.contractlens.core.error.MAX_INPUT_BYTES
 import dev.bloopdex.contractlens.core.model.Constraints
 import dev.bloopdex.contractlens.core.model.ContractSurface
 import dev.bloopdex.contractlens.core.model.NodeType
@@ -48,6 +49,9 @@ class JsonSchemaParser {
         text: String,
         contractName: String,
     ): ContractSurface {
+        if (text.length > MAX_INPUT_BYTES) {
+            throw ContractError.InputTooLarge(contractName, text.length.toLong())
+        }
         val root =
             try {
                 json.parseToJsonElement(text)

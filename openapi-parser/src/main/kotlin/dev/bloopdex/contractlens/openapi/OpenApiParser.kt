@@ -10,6 +10,7 @@
 package dev.bloopdex.contractlens.openapi
 
 import dev.bloopdex.contractlens.core.error.ContractError
+import dev.bloopdex.contractlens.core.error.MAX_INPUT_BYTES
 import dev.bloopdex.contractlens.core.model.ContractSurface
 import io.swagger.parser.OpenAPIParser
 import io.swagger.v3.parser.core.models.ParseOptions
@@ -54,6 +55,10 @@ class OpenApiParser {
 
     private fun readText(path: Path): String {
         if (!Files.exists(path)) throw ContractError.FileNotFound(path.toString())
+        // Size guard BEFORE reading: pathological documents fail with a
+        // typed error instead of exhausting memory (Phase 5 resource limits).
+        val size = try { Files.size(path) } catch (e: Exception) { throw ContractError.UnreadableFile(path.toString(), e) }
+        if (size > MAX_INPUT_BYTES) throw ContractError.InputTooLarge(path.toString(), size)
         return try {
             Files.readString(path)
         } catch (e: Exception) {

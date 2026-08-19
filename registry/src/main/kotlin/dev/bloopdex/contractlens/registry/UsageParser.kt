@@ -8,6 +8,7 @@ package dev.bloopdex.contractlens.registry
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import dev.bloopdex.contractlens.core.error.ContractError
+import dev.bloopdex.contractlens.core.error.MAX_INPUT_BYTES
 import dev.bloopdex.contractlens.core.usage.RawUsageGraph
 import dev.bloopdex.contractlens.core.usage.UsageGraph
 import dev.bloopdex.contractlens.core.usage.validateUsageGraph
@@ -22,6 +23,9 @@ object UsageParser {
         text: String,
         source: String,
     ): UsageGraph {
+        if (text.length > MAX_INPUT_BYTES) {
+            throw ContractError.InputTooLarge(source, text.length.toLong())
+        }
         val raw =
             try {
                 strictYaml.decodeFromString(RawUsageGraph.serializer(), text)

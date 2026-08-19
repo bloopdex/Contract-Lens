@@ -5,3 +5,6 @@ out/
 *.iml
 *.log
 .contractlens/
+
+# Kotlin 2.x project-local build cache
+.kotlin/

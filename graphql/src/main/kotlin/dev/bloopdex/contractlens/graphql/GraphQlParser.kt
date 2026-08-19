@@ -26,6 +26,7 @@
 package dev.bloopdex.contractlens.graphql
 
 import dev.bloopdex.contractlens.core.error.ContractError
+import dev.bloopdex.contractlens.core.error.MAX_INPUT_BYTES
 import dev.bloopdex.contractlens.core.model.ContractSurface
 import dev.bloopdex.contractlens.core.model.NodeType
 import dev.bloopdex.contractlens.core.model.Operation
@@ -51,6 +52,9 @@ class GraphQlParser {
         text: String,
         contractName: String,
     ): ContractSurface {
+        if (text.length > MAX_INPUT_BYTES) {
+            throw ContractError.InputTooLarge(contractName, text.length.toLong())
+        }
         val registry =
             try {
                 SchemaParser().parse(text)

@@ -13,6 +13,7 @@ package dev.bloopdex.contractlens.registry
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import dev.bloopdex.contractlens.core.error.ContractError
+import dev.bloopdex.contractlens.core.error.MAX_INPUT_BYTES
 import dev.bloopdex.contractlens.core.registry.ConsumerRegistry
 import dev.bloopdex.contractlens.core.registry.RawRegistry
 import dev.bloopdex.contractlens.core.registry.validateRegistry
@@ -27,6 +28,9 @@ object RegistryParser {
         text: String,
         source: String,
     ): ConsumerRegistry {
+        if (text.length > MAX_INPUT_BYTES) {
+            throw ContractError.InputTooLarge(source, text.length.toLong())
+        }
         val raw =
             try {
                 strictYaml.decodeFromString(RawRegistry.serializer(), text)
