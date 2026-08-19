@@ -171,6 +171,47 @@ class GeneratedClientProjectionTest :
             returnSchema.nodeType shouldBe NodeType.ANY
         }
 
+        test("responses with no content are void, never a crash (regression: thorn-api dump shape)") {
+            val projected =
+                GeneratedClientProjection.project(
+                    surface(
+                        operation(
+                            "get",
+                            "/health",
+                            responses = mapOf("200" to Response(emptyMap(), "r.200")),
+                        ),
+                    ),
+                    GeneratorStyle.TYPESCRIPT,
+                )
+            projected.operations
+                .single()
+                .responses
+                .getValue("return")
+                .content.values
+                .single()
+                .nodeType shouldBe NodeType.ANY
+        }
+
+        test("a request body with no content contributes no body property (regression: thorn-api dump shape)") {
+            val projected =
+                GeneratedClientProjection.project(
+                    surface(
+                        operation(
+                            "post",
+                            "/sessions",
+                            body = RequestBody(required = true, content = emptyMap()),
+                        ),
+                    ),
+                    GeneratorStyle.TYPESCRIPT,
+                )
+            projected.operations
+                .single()
+                .requestBody!!
+                .content.values
+                .single()
+                .properties shouldBe emptyMap()
+        }
+
         test("projection is deterministic and stable across runs") {
             val surface =
                 surface(

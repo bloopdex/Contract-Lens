@@ -132,12 +132,15 @@ object GeneratedClientProjection {
             if (parameter.required) required += parameter.name
         }
         operation.requestBody?.let { body ->
-            properties["body"] =
+            val bodySchema =
                 body.content
                     .toSortedMap()
                     .values
-                    .first()
-            if (body.required) required += "body"
+                    .firstOrNull()
+            if (bodySchema != null) {
+                properties["body"] = bodySchema
+                if (body.required) required += "body"
+            }
         }
         return SchemaNode(
             nodeType = NodeType.OBJECT,
@@ -156,15 +159,14 @@ object GeneratedClientProjection {
     }
 
     private fun returnSchemaOf(operation: Operation): SchemaNode {
-        if (operation.responses.isEmpty()) return anyNode("void")
-        val content =
-            operation.responses
-                .toSortedMap()
-                .values
-                .first()
-                .content
-                .toSortedMap()
-        return content["application/json"] ?: content.values.first()
+        // Responses without content ("description only", common in
+        // @nestjs/swagger dumps) contribute nothing to the return type.
+        for (response in operation.responses.toSortedMap().values) {
+            val content = response.content.toSortedMap()
+            if (content.isEmpty()) continue
+            return content["application/json"] ?: content.values.first()
+        }
+        return anyNode("void")
     }
 
     private fun anyNode(location: String): SchemaNode =
