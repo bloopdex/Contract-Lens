@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: Users API
+  version: 1.0.0
+paths:
+  /users:
+    get:
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            exclusiveMinimum: 0
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+components:
+  schemas:
+    User:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+        nickname:
+          type: [string, 'null']
+        address:
+          $ref: '#/components/schemas/Address'
+    Address:
+      type: object
+      properties:
+        city:
+          type: string
+        geolocation:
+          type: array
+          items:
+            type: number
+    NewUser:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, viewer]

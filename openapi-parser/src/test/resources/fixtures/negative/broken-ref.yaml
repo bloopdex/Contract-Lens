@@ -1,0 +1,16 @@
+openapi: 3.0.3
+info:
+  title: Broken Ref API
+  version: 1.0.0
+paths:
+  /thing:
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Missing'
+components:
+  schemas: {}
