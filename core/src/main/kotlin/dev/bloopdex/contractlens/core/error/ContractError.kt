@@ -85,4 +85,36 @@ sealed class ContractError(
     class GitIdentityUnavailable(
         detail: String,
     ) : ContractError("GIT_IDENTITY_UNAVAILABLE", "no git commit identity available: $detail (pass --sha explicitly)")
+
+    /** The registry file is malformed YAML or violates the registry schema (Phase 3). */
+    class RegistryInvalid(
+        detail: String,
+        cause: Throwable? = null,
+    ) : ContractError("REGISTRY_INVALID", "invalid registry: $detail", cause)
+
+    /** The registry declares a format version ContractLens does not support. */
+    class RegistryVersionUnsupported(
+        version: String,
+    ) : ContractError("REGISTRY_VERSION_UNSUPPORTED", "unsupported registry version '$version' (supported: 1)")
+
+    /** Two consumers in one registry share the same id; ids are the stable consumer identity. */
+    class RegistryDuplicateId(
+        id: String,
+    ) : ContractError("REGISTRY_DUPLICATE_ID", "duplicate consumer id '$id' (consumer ids must be unique within one registry)")
+
+    /** An operation selector is not "*" or a well-formed "METHOD /path-template". */
+    class RegistrySelectorInvalid(
+        consumerId: String,
+        selector: String,
+        detail: String,
+    ) : ContractError("REGISTRY_SELECTOR_INVALID", "invalid operation selector '$selector' for consumer '$consumerId': $detail")
+
+    /** Impact mapping requires the two snapshots to be the same contract (evolution, not comparison). */
+    class ContractMismatch(
+        oldContract: String,
+        newContract: String,
+    ) : ContractError(
+            "CONTRACT_MISMATCH",
+            "impact mapping requires both snapshots to be the same contract (old: '$oldContract', new: '$newContract')",
+        )
 }
