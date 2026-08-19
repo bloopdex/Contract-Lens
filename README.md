@@ -4,13 +4,14 @@ Local-first API contract impact-analysis tool: detect contract changes,
 classify them as breaking / non-breaking / review, and explain which
 known consumers may be affected — before merge.
 
-**Status:** Phase 3 (Consumer Registry & Impact Mapping) — structural
-diffing between two snapshots plus explicit consumer-registry impact
-mapping are implemented. Classification verdicts (breaking / non-breaking
-/ review) are NOT implemented yet — the diff engine reports structural
-facts only, and the mapper reports declared-consumer matches only.
+**Status:** Phase 4 (Generated Clients & Extended Contracts) — the full
+pipeline is implemented: structural diffing, the ADR-001 classifier
+(breaking / non-breaking / review verdicts + semver labels), explicit
+consumer-registry impact mapping, generated-client projection diffing,
+GraphQL SDL and JSON Schema adapters, and the usage-graph format.
+Consumer usage-aware classification is the documented Phase 4 follow-up.
 
-## What exists today (Phase 3)
+## What exists today (Phase 4)
 
 - Canonical contract model (`:core`) — one format-neutral representation
   of a contract surface with source locations for explainability.
@@ -23,21 +24,38 @@ facts only, and the mapper reports declared-consumer matches only.
 - Consumer registry (`:core` + `:registry`) — versioned YAML registry
   (Backstage-shaped, ADR-002), kaml-decoded with strict validation, and
   a pure consumer mapper producing deterministic per-consumer impacts.
-- CLI (`:cli`) — `contractlens snapshot | verify | list | diff | impact`
-  with structured JSON logs on stderr.
+- Classifier (`:core`, ADR-001) — the Phase 0 ruleset as a separate pure
+  layer: direction-aware verdicts, deterministic reasons, semver labels,
+  rename candidates stay review; `diff --classify` and `impact` produce
+  it and exit 1 on breaking changes.
+- Generated-client projection (`:generated-client`, ADR-006) —
+  deterministic generator conventions over OpenAPI snapshots, diffed by
+  the shared engine; `generated-diff --style ts|kotlin|java`.
+- GraphQL SDL adapter (`:graphql`) and JSON Schema event adapter
+  (`:json-schema`) — Phase 4 groundwork per ADR-004, feeding the same
+  snapshots, engine, and classifier (`snapshot` auto-detects `.graphql`,
+  `--format json-schema` covers events).
+- Usage graph (`:core` + `:registry`) — versioned format + typed model +
+  strict validation recording which fields consumers read; not yet wired
+  into classification (documented follow-up).
+- CLI (`:cli`) — `contractlens snapshot | verify | list | diff |
+  impact | generated-diff` with structured JSON logs on stderr.
 
 ## Module layout
 
 ```
-core            canonical model, registry domain, pure mapper, errors
-openapi-parser  OpenAPI -> canonical model adapter
-snapshot-store  snapshot documents, file-backed store, git identity
-registry        registry YAML -> validated domain (kaml)
-cli             the contractlens executable (Clikt)
+core             canonical model, registry/usage domain, diff, classifier, mapper
+openapi-parser   OpenAPI -> canonical model adapter
+snapshot-store   snapshot documents, file-backed store, git identity
+registry         registry + usage-graph YAML -> validated domain (kaml)
+generated-client OpenAPI surface -> generated-client projection (ADR-006)
+graphql          GraphQL SDL -> canonical model (graphql-java SchemaParser)
+json-schema      JSON Schema event -> canonical model (kotlinx JSON)
+cli              the contractlens executable (Clikt)
 ```
 
-Dependency direction is strictly inward: `cli` -> `snapshot-store` ->
-`core`, `cli` -> `openapi-parser` -> `core`, `cli` -> `registry` -> `core`.
+Dependency direction is strictly inward: every adapter module depends on
+`:core` only, and `:cli` depends on all of them.
 
 ## Build
 
@@ -61,13 +79,73 @@ contractlens snapshot verify .contractlens/snapshots/users@<sha>.snapshot.json
 contractlens snapshot list --store .contractlens/snapshots
 contractlens diff old.snapshot.json new.snapshot.json
 contractlens diff old.snapshot.json new.snapshot.json --json
+contractlens diff old.snapshot.json new.snapshot.json --classify
 contractlens impact old.snapshot.json new.snapshot.json --registry registry.yaml
 contractlens impact old.snapshot.json new.snapshot.json --registry registry.yaml --json
+contractlens generated-diff old.snapshot.json new.snapshot.json --style ts --classify
+contractlens snapshot api.graphql                       # GraphQL SDL (extension-detected)
+contractlens snapshot event.json --format json-schema   # JSON Schema event contract
 ```
 
-Exit codes: `0` success, `1` reserved for breaking changes (the
-classifier layer, a later phase), `2` operational errors (bad usage, bad
+Exit codes: `0` success (no breaking changes, or no classification
+requested), `1` breaking changes detected (`diff --classify`, `impact`,
+`generated-diff --classify`), `2` operational errors (bad usage, bad
 input, corrupt snapshots).
+
+## Classification (ADR-001)
+
+The classifier is a separate layer over the structural change set. Each
+change gets a verdict and a deterministic reason:
+
+```
+  REQUIRED_PROPERTY_ADDED POST /sessions → request body → schema → properties.webhookUrl : optional → required [breaking] (major)
+    reason: consumers that omit the new required property fail validation
+```
+
+Three verdicts: **breaking / non-breaking / review** — direction-aware
+(request: the consumer sends, the provider validates; response: the
+provider sends, the consumer reads), conservative (undeterminable
+direction or undocumented kinds are review, never silent guesses), and
+renames stay review candidates (never auto-classified). Semver labels
+derive from verdicts: breaking -> major, non-breaking + additive ->
+minor, other non-breaking -> patch, review -> no label. The documented
+contextual rules are implemented: required-property additions with a
+JSON Schema default soften to review, and requiredness of added
+parameters comes from the new surface. The 26-case end-to-end fixture
+corpus (the Phase 0 catalog) pins every rule.
+
+## `contractlens generated-diff` (ADR-006)
+
+Projects both snapshots through deterministic generator conventions —
+client method names (`getUsersById` from `GET /users/{id}`), merged
+request objects (parameters + body), normalized return types (void when
+no response content) — and diffs the projections with the SHARED
+engine; `--classify` adds verdicts and exit 1. Styles `ts | kotlin |
+java` share naming conventions at this depth (pinned by tests); the
+projection is convention-stable generator knowledge, NOT byte-exact
+generator output and NOT parsed generated source — model TYPE names are
+not reported (the canonical model resolves `$ref`s inline), which is a
+documented limitation.
+
+## Usage graph (Phase 4 groundwork)
+
+Records which fields a consumer actually reads, per operation and
+direction — the substrate for future usage-aware classification:
+
+```yaml
+version: 1
+consumers:
+  - id: thornwa-frontend
+    contract: thorn-api
+    operations:
+      - operation: GET /contacts/{id}
+        responseFields: [email, profile.address.city]
+```
+
+Operation selectors reuse the registry's canonical identity; duplicate
+operations merge deterministically; duplicate (consumer, contract)
+records fail with `USAGE_DUPLICATE_RECORD`. Parsed by `UsageParser`
+(:registry); not wired into classification or mapping yet.
 
 ## `contractlens diff`
 
@@ -171,16 +249,22 @@ The content hash covers everything except `capturedAt`; modified or
 corrupted snapshots are refused loudly and never trusted. Identical
 content always produces identical bytes (determinism is pinned by tests).
 
-## Known limitations (Phase 3)
+## Known limitations (Phase 4)
 
 - Local `$ref`s only; multi-file and remote references are rejected
   with `UNSUPPORTED_REFERENCE` (open question from Phase 0).
 - Size/depth guards exist for nesting; full resource-limit hardening
   (anchor bombs, huge documents) is Phase 5.
-- Classification verdicts and rename heuristics are deliberately
-  absent — the classifier is the next layer.
+- `x-stability-level` exemptions are not implemented — the canonical
+  model does not carry stability levels (Phase 1 scope).
 - Static source discovery does not exist and is out of scope for the
   core (ADR-002): consumers are only what the registry declares.
+- The usage graph is validated and parsed but not wired into
+  classification (documented Phase 4 follow-up).
+- Generated-client projection is convention-stable, not byte-exact;
+  model TYPE names are not reported (`$ref`s resolve inline).
+- GraphQL/JSON Schema adapters are groundwork: single-file SDL,
+  JSON Schema core vocabulary, local refs stay REF nodes.
 - `impact` requires both snapshots to be the same contract name
   (`CONTRACT_MISMATCH` otherwise); contract renames are not mapped.
 - Strict OpenAPI validation can refuse real-world dumps with undeclared
