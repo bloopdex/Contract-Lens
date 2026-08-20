@@ -1,0 +1,9 @@
+.git
+.gradle
+.kotlin
+build
+dist
+.idea
+.cifuzz-corpus
+**/build
+*.log

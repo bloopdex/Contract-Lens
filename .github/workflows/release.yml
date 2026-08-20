@@ -1,0 +1,120 @@
+# Tag-driven release workflow (ADR-007, docs/release.md).
+#
+# Publishing ContractLens is one command on the maintainer's side: push
+# a `vX.Y.Z` tag. This workflow runs ONLY on version-tag pushes:
+# verifies the tag against the version literal in the root
+# build.gradle.kts, runs the full validation suite, builds the fat JAR,
+# assembles the release bundle with the release tooling, verifies its
+# checksums, smoke-tests the artifact, and creates the GitHub Release.
+#
+# Deliberately NOT here: nothing commits or pushes back into the
+# repository, nothing creates or moves tags, and nothing publishes from
+# branch pushes or pull requests. `dist/` is generated CI output and
+# stays gitignored; the repository tree is verified clean before the
+# release is created.
+#
+# Security: `contents: write` is granted to this job only, and only tag
+# pushes (maintainer-only) reach it — untrusted PR workflows never get
+# release credentials (SECURITY.md). Publication is pending the repo
+# hosting decision; the local equivalent (scripts/release.ps1) is
+# executed and verified locally.
+
+name: Release
+
+# Quoted: unquoted `on` parses as a boolean under YAML 1.1 tooling.
+"on":
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        # A tag push event checks out exactly the tagged commit.
+
+      - name: Verify the tag (strict vMAJOR.MINOR.PATCH)
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -ne 'tag') {
+            throw "the release workflow must run on a tag, got ref type '$env:GITHUB_REF_TYPE'"
+          }
+          $tag = $env:GITHUB_REF_NAME
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') {
+            throw "malformed release tag '$tag' - expected vMAJOR.MINOR.PATCH (e.g. v0.1.0)"
+          }
+          "VERSION=$($tag.Substring(1))" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "release request: $tag (application version $($tag.Substring(1)))"
+
+      - name: Verify the tag matches the version in build.gradle.kts
+        shell: pwsh
+        run: |
+          $buildFile = Get-Content build.gradle.kts -Raw
+          # Strict equality: the version is a literal, not a regex.
+          $pattern = 'version\s*=\s*"' + $env:VERSION.Replace('.', '\.') + '"'
+          if ($buildFile -notmatch $pattern) {
+            throw "tag $env:GITHUB_REF_NAME requires version `"$env:VERSION`" in build.gradle.kts - bump it first"
+          }
+          Write-Host "build.gradle.kts version $env:VERSION matches the tag"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build the release bundle
+        shell: pwsh
+        run: |
+          # release.ps1 re-verifies the build-file version, runs the full
+          # validation suite (clean build + tests + lint + coverage gate),
+          # builds the fat JAR, assembles dist\contractlens-<version>
+          # (jar, SHA256SUMS, install scripts, CHANGELOG, LICENSE),
+          # verifies the checksums, and smoke-tests the artifact.
+          powershell -NoProfile -File scripts\release.ps1 -Version $env:VERSION
+
+      - name: Verify the bundle checksums
+        shell: pwsh
+        run: |
+          $bundle = "dist\contractlens-$env:VERSION"
+          foreach ($line in Get-Content "$bundle\SHA256SUMS") {
+            $hash, $name = $line -split '\s+', 2
+            $actual = (Get-FileHash -Algorithm SHA256 (Join-Path $bundle $name)).Hash.ToLowerInvariant()
+            if ($actual -ne $hash) {
+              throw "bundle checksum mismatch for ${name}: expected $hash, got $actual"
+            }
+          }
+          Write-Host "SHA256SUMS verified for every artifact in the bundle"
+
+      - name: Verify the working tree stayed clean (dist/ is ignored)
+        shell: pwsh
+        run: |
+          $dirty = git status --porcelain
+          if ($dirty) {
+            throw "the workflow must never modify the repository - unexpected changes:`n$dirty"
+          }
+          Write-Host "working tree clean; dist/ remains ignored"
+
+      - name: Create the GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $bundle = "dist\contractlens-$env:VERSION"
+          gh release create $env:GITHUB_REF_NAME `
+            "$bundle\contractlens-$env:VERSION-all.jar" `
+            "$bundle\SHA256SUMS" `
+            "$bundle\install.ps1" `
+            "$bundle\install.sh" `
+            "$bundle\uninstall.ps1" `
+            "$bundle\CHANGELOG.md" `
+            "$bundle\LICENSE" `
+            --title "ContractLens $env:GITHUB_REF_NAME" `
+            --notes-file CHANGELOG.md

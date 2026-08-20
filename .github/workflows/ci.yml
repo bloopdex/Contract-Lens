@@ -1,9 +1,26 @@
-# Basic CI for ContractLens (Phase 1): build + ktlint + full test suite
-# on the two supported JVM versions and both runner OSes.
+# Phase 6 CI architecture (docs/ci.md) — pull requests and pushes to
+# main. Every job below is BLOCKING; the expensive verification
+# (long fuzz sweeps, coverage-guided fuzzing, full benchmark
+# comparisons, action e2e) runs in nightly.yml.
 #
-# NOTE: this workflow only executes once the repository is pushed to a
-# GitHub host — no remote is configured yet (hosting decision is an open
-# BloopLab item, see the README's known limitations).
+# Job split rationale (measured locally, 2026-08-19):
+#   - build+test: the full suite is the correctness gate; the 2x2
+#     matrix (both supported JVMs on both OSes) is the Phase 1 job
+#     kept intact.
+#   - coverage/lint: separate jobs make each failure diagnosable.
+#   - security: dependency-verification strict + OSV scan (lockfiles
+#     are committed, so the scan is reproducible — SECURITY.md).
+#   - fuzz-smoke: the seeded harness at a small iteration count plus
+#     Jazzer crash-input replay; the recorded 200k sweeps (39 min)
+#     belong to the nightly job.
+#   - benchmark-smoke: reduced timing runs that prove the harness and
+#     fixtures still execute; comparisons against the committed
+#     baseline belong to the nightly job.
+#
+# NOTE (honest): this workflow only executes once the repository is
+# pushed to a GitHub host — no remote is configured yet (hosting is an
+# open BloopLab decision). Every command here has been executed
+# locally with the results recorded in docs/ci.md.
 
 name: CI
 
@@ -12,8 +29,11 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  build-test:
     strategy:
       fail-fast: false
       matrix:
@@ -34,3 +54,93 @@ jobs:
 
       - name: Build, lint, and test
         run: ./gradlew build --console=plain
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Coverage gate (per-module line minimums)
+        run: ./gradlew koverVerify --console=plain
+
+      - name: Aggregate coverage report
+        run: ./gradlew koverXmlReport --console=plain
+
+      - name: Upload the coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/reports/kover/report.xml
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Resolve dependencies against the committed verification metadata
+        run: ./gradlew assemble --dependency-verification=strict --console=plain
+
+      - name: OSV-Scanner (Gradle lockfiles)
+        uses: google/osv-scanner-action@v1
+        with:
+          scan-args: |-
+            --format=table
+            --fail-on-vuln=true
+            --config=osv-scanner.toml
+            -r
+            .
+
+  fuzz-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Seeded harness smoke (parsers + classifier)
+        run: ./gradlew :cli:fuzz -PfuzzIterations=5000 :core:fuzz -PfuzzIterations=5000 --console=plain
+
+      - name: Jazzer crash-input replay (regression mode)
+        run: ./gradlew :fuzz:jazzerFuzz --console=plain
+
+  benchmark-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Benchmark smoke (reduced runs, writes nothing)
+        run: ./gradlew :benchmark:benchSmoke --console=plain

@@ -1,0 +1,158 @@
+# Phase 6 nightly pipeline (docs/ci.md) — the expensive verification
+# that has no place on every pull request. Scheduled (plus manual
+# dispatch); every job FAILS the scheduled run on real problems and
+# preserves evidence.
+#
+# Failure policy per job:
+#   - fuzz-long: a violation of the harness invariants (crash or
+#     nondeterminism) fails; the harness saves the failing input.
+#   - jazzer-fuzz: a found crash fails AND the reproducer directory is
+#     uploaded as an artifact — the fix flow is reproduce locally →
+#     root cause → fix → commit the reproducer as a regression seed.
+#   - benchmark: comparisons against the committed baseline use the
+#     policy in BenchmarkCheck.kt (FAIL only for catastrophic
+#     regressions; 2x..3x is a WARN, never silently ignored).
+#     The FAIL gate applies only on the OS family of the committed
+#     baseline (windows) — cross-OS runs are informational by design.
+#   - action-e2e: the pass and block cases of the reusable GitHub
+#     Action run against real fixtures.
+
+name: Nightly
+
+"on":
+  schedule:
+    - cron: '37 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz-long:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Long seeded harness sweep (recorded: ~39 min for the parser sweep)
+        run: ./gradlew :cli:fuzz -PfuzzIterations=200000 :core:fuzz -PfuzzIterations=200000 --console=plain
+
+  jazzer-fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Coverage-guided fuzzing (6 targets, 2 min each)
+        run: ./gradlew :fuzz:jazzerFuzz -Pjazzer.fuzz=1 --console=plain
+
+      - name: Upload crash reproducers (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazzer-crash-inputs
+          path: |
+            fuzz/src/test/resources/**/ParserJazzerTargetsInputs/**
+            fuzz/.cifuzz-corpus/**
+
+  benchmark:
+    # The committed baseline was measured on Windows (docs/benchmarks.md);
+    # the FAIL gate applies on this job, the ubuntu job is informational.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Full benchmark suite + comparison against the committed baseline
+        run: .\gradlew.bat :benchmark:benchCheck --console=plain
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-windows
+          path: benchmark/build/benchmark-results.json
+
+  benchmark-ubuntu:
+    # Informational by design: cross-OS numbers are never compared as
+    # equivalent measurements (BenchmarkCheck.kt marks every row
+    # INFORMATIONAL and cannot fail).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Full benchmark suite (cross-OS, informational)
+        run: ./gradlew :benchmark:benchCheck --console=plain
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-ubuntu
+          path: benchmark/build/benchmark-results.json
+
+  action-e2e:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Reusable-action end-to-end test (pass and block cases)
+        shell: pwsh
+        run: powershell -NoProfile -File scripts\test-action.ps1
+
+  osv-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: OSV-Scanner (fresh database each night)
+        uses: google/osv-scanner-action@v1
+        with:
+          scan-args: |-
+            --format=table
+            --fail-on-vuln=true
+            --config=osv-scanner.toml
+            -r
+            .

@@ -1,0 +1,103 @@
+# ContractLens pre-merge check — reusable composite action (the Phase 6
+# page's "GitHub Action pre-merge check"). Contract in docs/ci.md:
+#
+#   inputs: old-spec, new-spec, registry?, contract-name?,
+#           fail-on-breaking (default true), comment-on-pr (default false)
+#   outputs: report (path to the JSON report), breaking (true|false)
+#   exit: 0 no breaking changes, 1 breaking changes detected
+#         (unless fail-on-breaking=false)
+#
+# Behavior: snapshot the base document → snapshot the head document →
+# impact (with a registry) or classified diff (without) → report file +
+# optional step summary + optional PR comment. The analysis itself runs
+# in scripts/action-check.ps1, which reads ONLY environment variables
+# (no shell interpolation of untrusted input) and writes only under the
+# runner temp directory.
+#
+# Usage (consuming workflow):
+#   - uses: <host>/contractlens@v1
+#     with:
+#       old-spec: api/openapi.yaml        # same path in base and head
+#       new-spec: api/openapi.yaml
+#       registry: .contractlens/registry.yaml
+#   The consuming workflow checks out the base ref for old-spec
+#   (actions/checkout with the PR base) before invoking the action.
+#   For `comment-on-pr: true` the consuming workflow must pass a
+#   GITHUB_TOKEN with PR write access.
+
+name: "ContractLens pre-merge check"
+description: "Snapshot two contract documents, run the analysis, and block breaking changes"
+
+inputs:
+  old-spec:
+    description: "Path to the base contract document (OpenAPI/GraphQL/JSON Schema)"
+    required: true
+  new-spec:
+    description: "Path to the head contract document"
+    required: true
+  registry:
+    description: "Path to the consumer registry YAML (enables impact mapping)"
+    required: false
+  contract-name:
+    description: "Contract name (default: the old spec's file stem)"
+    required: false
+  fail-on-breaking:
+    description: "Fail the workflow when breaking changes are detected"
+    required: false
+    default: "true"
+  comment-on-pr:
+    description: "Post the report as a PR comment (requires a GITHUB_TOKEN with PR write access)"
+    required: false
+    default: "false"
+
+outputs:
+  report:
+    description: "Path to the JSON report (impact or classified diff)"
+    value: ${{ steps.check.outputs.report }}
+  breaking:
+    description: "true when breaking changes were detected"
+    value: ${{ steps.check.outputs.breaking }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Build the contractlens fat JAR
+      shell: pwsh
+      run: |
+        ./gradlew :cli:shadowJar --console=plain
+        $jar = Get-ChildItem cli/build/libs/contractlens-*-all.jar | Select-Object -First 1
+        if (-not $jar) { throw "fat JAR not produced by :cli:shadowJar" }
+        "CL_JAR=$($jar.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+    - name: Run the pre-merge check
+      id: check
+      shell: pwsh
+      env:
+        CL_JAR: ${{ env.CL_JAR }}
+        CL_OLD_SPEC: ${{ inputs.old-spec }}
+        CL_NEW_SPEC: ${{ inputs.new-spec }}
+        CL_REGISTRY: ${{ inputs.registry }}
+        CL_CONTRACT: ${{ inputs.contract-name }}
+        CL_FAIL_ON_BREAKING: ${{ inputs.fail-on-breaking }}
+        CL_GITHUB_OUTPUT: $GITHUB_OUTPUT
+        CL_GITHUB_STEP_SUMMARY: $GITHUB_STEP_SUMMARY
+      run: powershell -NoProfile -File ${{ github.action_path }}/scripts/action-check.ps1
+
+    - name: Comment on the pull request (opt-in)
+      if: inputs.comment-on-pr == 'true'
+      shell: pwsh
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        REPORT_PATH: ${{ steps.check.outputs.report }}
+      run: |
+        $body = Get-Content $env:REPORT_PATH -Raw
+        gh pr comment --body "ContractLens report:`n``````json`n$body`n``````"
