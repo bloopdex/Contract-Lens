@@ -1,4 +1,4 @@
-// Property-based invariants of the classifier (Phase 4):
+// Property-based invariants of the classifier:
 //   1. determinism — identical inputs, identical reports
 //   2. totality — every change is classified exactly once, in changeOrder
 //   3. verdict/semver consistency — review never carries a semver label

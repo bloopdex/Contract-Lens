@@ -1,4 +1,4 @@
-// Pins the Phase 6 version contract (ADR-007): `--version` reports the
+// Pins the version contract (ADR-007): `--version` reports the
 // version from the single authoritative source (`version` in the root
 // build.gradle.kts, generated into CONTRACTLENS_VERSION). The literal
 // here duplicates the build file on purpose — the release script

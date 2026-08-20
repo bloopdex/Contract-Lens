@@ -1,4 +1,4 @@
-// File-backed snapshot store (Phase 0, ADR-003).
+// File-backed snapshot store (ADR-003).
 //
 // Layout: <storeDir>/<contract>@<sha>.snapshot.json. The index is a
 // directory scan — it rebuilds on every startup, so "index rebuilds

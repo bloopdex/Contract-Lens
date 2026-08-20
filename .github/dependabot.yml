@@ -1,4 +1,4 @@
-# Phase 6 dependency-update automation. Version updates open PRs; every
+# Dependency-update automation. Version updates open PRs; every
 # PR runs the full validation pipeline, so an unsafe update cannot land
 # silently. Activates once the repository is hosted (the workflows have
 # the same precondition).

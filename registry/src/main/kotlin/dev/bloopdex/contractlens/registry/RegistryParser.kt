@@ -1,4 +1,4 @@
-// Registry loading adapter (Phase 3).
+// Registry loading adapter.
 //
 // kaml (ADR-005) decodes the YAML document into the raw registry shape;
 // validateRegistry() (:core) turns it into the validated typed domain.

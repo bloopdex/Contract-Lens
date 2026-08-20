@@ -1,5 +1,5 @@
-// Shared property-test generators for the canonical model (Phase 4).
-// Used by the classifier property tests; the Phase 2/3 property suites
+// Shared property-test generators for the canonical model.
+// Used by the classifier property tests; the diff/mapping property suites
 // keep their own local copies so their files remain reviewable in
 // isolation.
 

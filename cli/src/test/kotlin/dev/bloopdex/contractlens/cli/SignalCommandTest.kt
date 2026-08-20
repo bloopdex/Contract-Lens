@@ -1,4 +1,4 @@
-// CLI tests for the Phase 6 signal emitter (ADR-008): payload shape on
+// CLI tests for the signal emitter (ADR-008): payload shape on
 // stdout, --output files, the privacy boundary end-to-end, failure
 // behavior on unwritable outputs, and exit codes.
 

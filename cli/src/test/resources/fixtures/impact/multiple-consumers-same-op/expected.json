@@ -17,7 +17,7 @@
             ]
         },
         {
-            "consumer": "thornwa-frontend",
+            "consumer": "example-frontend",
             "changes": [
                 {
                     "method": "get",

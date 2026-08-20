@@ -1,11 +1,11 @@
-// Phase 6 benchmark regression policy (docs/benchmarks.md):
+// Benchmark regression policy (docs/benchmarks.md):
 //
 // Comparisons are computed against the committed baseline
 // (docs/benchmarks/baseline.json). Threshold rationale:
 //   - the scenarios measure 1-50 ms operations; shared CI runners add
 //     scheduling/GC noise that routinely doubles a run, so a bare ratio
 //     would fail on noise ("any 1 ms difference = failure" is exactly
-//     what the Phase 6 principles forbid).
+//     what the benchmark policy forbids).
 //   - a regression is only a FAIL when it is BOTH at least 3x the
 //     baseline median AND above 1000 ms — i.e. noise cannot explain it
 //     and a user-visible slowdown exists; plus an absolute sanity bound

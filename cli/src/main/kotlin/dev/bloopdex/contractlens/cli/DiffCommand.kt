@@ -1,4 +1,4 @@
-// `contractlens diff <old-snapshot> <new-snapshot>` — the Phase 2 diff
+// `contractlens diff <old-snapshot> <new-snapshot>` — the structural diff
 // workflow: load two verified snapshots and print the deterministic
 // structural change set (human-readable or `--json`).
 //
@@ -124,7 +124,7 @@ class DiffCommand : BaseCommand(name = "diff") {
     private val jsonOut by option("--json", help = "Machine-readable JSON report on stdout").flag()
 
     private val classifyOut by
-        option("--classify", help = "Classify changes with the Phase 0 ruleset (breaking / non-breaking / review); exit 1 on breaking")
+        option("--classify", help = "Classify changes with the breaking / non-breaking / review ruleset; exit 1 on breaking")
             .flag()
 
     override fun runCommand() {

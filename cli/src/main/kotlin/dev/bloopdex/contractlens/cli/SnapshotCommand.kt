@@ -1,4 +1,4 @@
-// `contractlens snapshot <contract>` — Phase 1's capture workflow:
+// `contractlens snapshot <contract>` — the capture workflow:
 // parse an OpenAPI 3.0/3.1 document into the canonical model and
 // persist a hash-verified snapshot keyed by git commit SHA.
 

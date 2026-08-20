@@ -1,4 +1,4 @@
-// Phase 5 classifier/diff invariant fuzzing: the existing property
+// Classifier/diff invariant fuzzing: the existing property
 // invariants at higher iteration counts, driven by the same
 // fuzz.iterations property as ParserFuzzTest. Determinism, totality,
 // purity, verdict/semver consistency, rename pairing, mapper phantom

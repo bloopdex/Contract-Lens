@@ -5,7 +5,7 @@ consumers:
     contract: fixture
     operations:
       - GET /users/{id}
-  - id: thornwa-frontend
+  - id: example-frontend
     kind: frontend
     contract: fixture
     operations:

@@ -1,11 +1,11 @@
-// Pure consumer mapping (Phase 3).
+// Pure consumer mapping.
 //
 // Consumes the validated registry and the structural change set and
 // produces deterministic per-consumer impacts. No IO, no parsing, no
 // severity decisions — the core mapping logic stays a pure function of
 // its inputs.
 //
-// Semantics (ADR-002 + the Phase 3 execution scope):
+// Semantics (ADR-002):
 //   - a change maps to a consumer when the consumer's contract selector
 //     names the diffed contract AND an operation selector matches the
 //     canonical identity of the changed operation

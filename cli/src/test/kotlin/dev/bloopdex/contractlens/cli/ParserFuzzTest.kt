@@ -1,4 +1,4 @@
-// Phase 5 fuzz harness for every untrusted-input boundary (OpenAPI,
+// Fuzz harness for every untrusted-input boundary (OpenAPI,
 // GraphQL SDL, JSON Schema, registry, usage graph).
 //
 // Methodology: seeded, corpus-driven mutation fuzzing + uniform random
@@ -13,9 +13,9 @@
 // Iteration count comes from the fuzz.iterations system property
 // (default keeps the normal test run fast; `gradlew :cli:fuzz` raises
 // it — see cli/build.gradle.kts). Jazzer (ADR-005) is deferred to
-// Phase 6 CI: coverage-guided fuzzing adds most value as a long-running
+// CI: coverage-guided fuzzing adds most value as a long-running
 // CI job, and the local harness above pins the invariants Jazzer would
-// assert. Recorded high-iteration run: documented on the Phase 5 page.
+// assert. Recorded high-iteration run: see docs/fuzzing.md.
 
 package dev.bloopdex.contractlens.cli
 
@@ -41,8 +41,8 @@ private val SEED_CORPUS =
         "openapi: 3.0.3\ninfo: {title: T, version: 1.0.0}\npaths:\n  /ping:\n    get:\n      responses:\n        '200':\n          description: ok\n",
         "type Query {\n  user(id: ID!): User\n}\ntype User {\n  id: ID!\n  email: String\n}\n",
         "{\"title\": \"E\", \"type\": \"object\", \"properties\": {\"a\": {\"type\": \"string\"}}, \"required\": [\"a\"]}",
-        "version: 1\nconsumers:\n  - id: c\n    kind: service\n    contract: thorn-api\n    operations: [\"*\"]\n",
-        "version: 1\nconsumers:\n  - id: c\n    contract: thorn-api\n    operations:\n      - operation: \"*\"\n        responseFields: [email]\n",
+        "version: 1\nconsumers:\n  - id: c\n    kind: service\n    contract: example-api\n    operations: [\"*\"]\n",
+        "version: 1\nconsumers:\n  - id: c\n    contract: example-api\n    operations:\n      - operation: \"*\"\n        responseFields: [email]\n",
     ).map { it.toByteArray() }
 
 private fun loadCorpus(): List<ByteArray> {

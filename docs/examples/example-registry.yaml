@@ -1,0 +1,22 @@
+# Example consumer registry (registry format v1, ADR-002).
+#
+# The DECLARED consumers of the example-api contract. This file is a
+# copy-ready template: consumers not listed here are invisible to
+# ContractLens by design (honesty boundary, ADR-002 — see
+# docs/architecture.md).
+version: 1
+consumers:
+  - id: example-frontend
+    kind: frontend
+    contract: example-api
+    operations:
+      - "*"
+    contact: frontend team
+    notes: ships against every operation of example-api
+  - id: example-gateway
+    kind: service
+    contract: example-api
+    operations:
+      - GET /users/{id}
+      - POST /sessions
+    contact: platform team

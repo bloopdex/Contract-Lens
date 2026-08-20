@@ -1,4 +1,4 @@
-// The Phase 3 end-to-end fixture corpus: every mapping rule has an
+// The consumer-impact end-to-end fixture corpus: every mapping rule has an
 // old/new OpenAPI pair plus a registry and an expected impact report.
 // Specs go through the REAL parser, changes come from the REAL diff
 // engine, the registry goes through the REAL registry adapter, and the

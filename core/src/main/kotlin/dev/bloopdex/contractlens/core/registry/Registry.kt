@@ -1,4 +1,4 @@
-// Consumer registry domain model (Phase 0, ADR-002; implemented Phase 3).
+// Consumer registry domain model (ADR-002).
 //
 // The registry is the source of DECLARED consumer knowledge: explicit,
 // versioned, local-first, deterministic. Unregistered consumers are

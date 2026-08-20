@@ -1,4 +1,4 @@
-// Phase 5 robustness + security regression tests: resource limits on
+// Robustness + security regression tests: resource limits on
 // every untrusted input, the snapshot-store filename boundary, and the
 // redaction boundary (no raw spec content — descriptions/examples —
 // may leak into snapshots or reports).

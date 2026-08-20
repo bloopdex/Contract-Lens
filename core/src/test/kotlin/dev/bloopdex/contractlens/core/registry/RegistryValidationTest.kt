@@ -1,4 +1,4 @@
-// Registry validation unit tests (Phase 3). validateRegistry() turns the
+// Registry validation unit tests. validateRegistry() turns the
 // raw document shape into the typed domain; every failure must be typed,
 // deterministic, and explainable. The kaml-level decode failures (bad
 // YAML, wrong types, unknown fields) are pinned in :registry.
@@ -16,7 +16,7 @@ class RegistryValidationTest :
 
         fun rawConsumer(
             id: String,
-            contract: String = "thorn-api",
+            contract: String = "example-api",
             operations: List<String>? = listOf("*"),
             kind: String = "frontend",
         ): RawConsumer = RawConsumer(id = id, kind = kind, contract = contract, operations = operations)
@@ -29,7 +29,7 @@ class RegistryValidationTest :
             val consumer = registry.consumers.single()
             consumer.id shouldBe "consumer-a"
             consumer.kind shouldBe ConsumerKind.FRONTEND
-            consumer.contract shouldBe "thorn-api"
+            consumer.contract shouldBe "example-api"
             consumer.selectors.single().matchesAll shouldBe true
         }
 

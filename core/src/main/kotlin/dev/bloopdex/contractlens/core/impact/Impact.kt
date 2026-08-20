@@ -1,4 +1,4 @@
-// Consumer impact model (Phase 3) + operation-key derivation.
+// Consumer impact model + operation-key derivation.
 //
 // The mapper answers exactly one question: which DECLARED consumers are
 // affected by these structural changes? An ImpactReport carries the
@@ -8,7 +8,7 @@
 // "this consumer will definitely break" (the classifier's job, later).
 //
 // affectedOperations() derives the changed operation's canonical
-// identity from the engine's location grammar (Phase 2, fixture-pinned):
+// identity from the engine's location grammar (fixture-pinned):
 //   - OPERATION_ADDED/REMOVED: location IS "METHOD /path"
 //   - OPERATION_PATH_CHANGED: location is "METHOD /old-path" and from/to
 //     carry the raw old/new paths — BOTH operations are affected

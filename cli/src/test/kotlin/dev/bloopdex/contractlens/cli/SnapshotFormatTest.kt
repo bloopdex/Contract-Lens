@@ -1,4 +1,4 @@
-// Snapshot format-dispatch tests (Phase 4): .graphql/.graphqls files
+// Snapshot format-dispatch tests: .graphql/.graphqls files
 // route to the GraphQL adapter, --format json-schema routes to the JSON
 // Schema adapter, unknown --format values fail clearly, and the default
 // OpenAPI behavior is untouched.

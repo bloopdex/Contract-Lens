@@ -18,7 +18,7 @@ sealed class ContractError(
         path: String,
     ) : ContractError("FILE_NOT_FOUND", "file not found: $path")
 
-    /** The input exceeds the resource limit; rejected before parsing (Phase 5). */
+    /** The input exceeds the resource limit; rejected before parsing. */
     class InputTooLarge(
         source: String,
         size: Long,
@@ -61,11 +61,11 @@ sealed class ContractError(
         at: String,
     ) : ContractError("UNRESOLVED_REFERENCE", "unresolved reference '$ref' at $at")
 
-    /** A $ref targets a multi-file or remote document (Phase 1 limitation, recorded from Phase 0's open questions). */
+    /** A $ref targets a multi-file or remote document (a recorded limitation). */
     class UnsupportedReference(
         ref: String,
         at: String,
-    ) : ContractError("UNSUPPORTED_REFERENCE", "unsupported reference '$ref' at $at (local references only in Phase 1)")
+    ) : ContractError("UNSUPPORTED_REFERENCE", "unsupported reference '$ref' at $at (local references only)")
 
     /** The document nests schemas beyond the phase-1 depth bound. */
     class DepthExceeded(
@@ -95,7 +95,7 @@ sealed class ContractError(
         detail: String,
     ) : ContractError("GIT_IDENTITY_UNAVAILABLE", "no git commit identity available: $detail (pass --sha explicitly)")
 
-    /** The registry file is malformed YAML or violates the registry schema (Phase 3). */
+    /** The registry file is malformed YAML or violates the registry schema. */
     class RegistryInvalid(
         detail: String,
         cause: Throwable? = null,
@@ -127,13 +127,13 @@ sealed class ContractError(
             "impact mapping requires both snapshots to be the same contract (old: '$oldContract', new: '$newContract')",
         )
 
-    /** The signal output file cannot be written (Phase 6, ADR-008). */
+    /** The signal output file cannot be written (ADR-008). */
     class OutputUnwritable(
         path: String,
         detail: String,
     ) : ContractError("OUTPUT_UNWRITABLE", "cannot write signal output '$path': $detail")
 
-    /** The usage graph file is malformed YAML or violates the usage schema (Phase 4). */
+    /** The usage graph file is malformed YAML or violates the usage schema. */
     class UsageInvalid(
         detail: String,
         cause: Throwable? = null,

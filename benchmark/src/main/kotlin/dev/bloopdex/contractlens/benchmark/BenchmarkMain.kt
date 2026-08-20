@@ -1,12 +1,12 @@
-// Phase 5 performance baselines (methodology: docs/benchmarks.md).
+// Performance baselines (methodology: docs/benchmarks.md).
 //
 // Each scenario: warmup runs, then timed runs; the recorded value is
 // the MEDIAN (min also reported). Deterministic synthetic fixtures so
 // the baseline is reproducible: a 5k-line OpenAPI spec, its mutated
 // twin, a 1k-consumer registry, a 1k-line GraphQL SDL document, and a
 // 1k-line JSON Schema document. Results are printed and written to
-// docs/benchmarks/baseline.json. No targets are claimed — Phase 6
-// turns these into regression benchmarks.
+// docs/benchmarks/baseline.json. No targets are claimed — these
+// run as regression benchmarks in CI.
 
 package dev.bloopdex.contractlens.benchmark
 
@@ -202,7 +202,7 @@ private fun benchmark(
     )
 }
 
-// Phase 6 modes:
+// Modes:
 //   (default) `:benchmark:bench`       — full suite, rewrites the
 //             committed baseline (a conscious maintainer action).
 //   smoke     `:benchmark:benchSmoke`  — reduced timing runs, writes

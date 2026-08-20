@@ -1,11 +1,11 @@
-// Phase 6 coverage-guided fuzz targets (Jazzer).
+// Coverage-guided fuzz targets (Jazzer).
 //
-// Target selection is deliberate, not exhaustive (per the Phase 6
+// Target selection is deliberate, not exhaustive (per the
 // execution principles: select meaningful entry points, never blindly
 // expose every function):
 //
 //   - the five PARSERS are the untrusted-input boundaries — exactly
-//     where coverage-guided exploration adds value over the Phase 5
+//     where coverage-guided exploration adds value over the
 //     seeded harness.
 //   - snapshot-build-verify round-trips the canonical model through
 //     build → hash → serialize → parse for every input that manages
@@ -14,7 +14,7 @@
 //
 // NOT targeted: the diff engine, classifier, and mapper. Their inputs
 // are typed, already-validated domain data (surfaces, change sets),
-// not bytes — the Phase 5 invariant fuzz (200k classifier iterations)
+// not bytes — the invariant fuzz (200k classifier iterations)
 // already covers them, and a Jazzer target that must construct valid
 // typed inputs out of bytes would only fuzz our own test scaffolding.
 // That evaluation is recorded in docs/fuzzing.md.

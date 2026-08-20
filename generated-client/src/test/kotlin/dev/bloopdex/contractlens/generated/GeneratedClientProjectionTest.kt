@@ -1,4 +1,4 @@
-// Generated-client projection unit tests (Phase 4, ADR-006): the
+// Generated-client projection unit tests (ADR-006): the
 // deterministic generator conventions — method naming, merged request
 // objects, normalized return type, style recording.
 
@@ -171,7 +171,7 @@ class GeneratedClientProjectionTest :
             returnSchema.nodeType shouldBe NodeType.ANY
         }
 
-        test("responses with no content are void, never a crash (regression: thorn-api dump shape)") {
+        test("responses with no content are void, never a crash (regression: example-api dump shape)") {
             val projected =
                 GeneratedClientProjection.project(
                     surface(
@@ -192,7 +192,7 @@ class GeneratedClientProjectionTest :
                 .nodeType shouldBe NodeType.ANY
         }
 
-        test("a request body with no content contributes no body property (regression: thorn-api dump shape)") {
+        test("a request body with no content contributes no body property (regression: example-api dump shape)") {
             val projected =
                 GeneratedClientProjection.project(
                     surface(

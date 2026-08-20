@@ -1,5 +1,5 @@
 // `contractlens impact <old-snapshot> <new-snapshot> --registry <file>`
-// — the Phase 3 workflow: verify both snapshots, diff them, load and
+// — the consumer-impact workflow: verify both snapshots, diff them, load and
 // validate the consumer registry, and map the change set to DECLARED
 // consumers.
 //
@@ -7,7 +7,7 @@
 // of the changed surface". Unregistered consumers are not visible to
 // ContractLens, unmapped changes stay visible in the report, and no
 // breaking verdicts are decided here — exit 1 stays reserved for the
-// classifier (Phase 0 architecture contract).
+// classifier (the exit-code contract).
 
 package dev.bloopdex.contractlens.cli
 

@@ -1,4 +1,4 @@
-// Canonical contract model (Phase 0, ADR-001/ADR-004).
+// Canonical contract model (ADR-001/ADR-004).
 //
 // One format-neutral representation of a contract surface; OpenAPI maps
 // into it today, GraphQL/JSON Schema later via their own parsers. Every
@@ -7,7 +7,7 @@
 // never an internal id.
 //
 // All collections are normalized at construction time (sorted, deduped,
-// deterministic); see Normalization.kt. Deliberate omissions (Phase 0
+// deterministic); see Normalization.kt. Deliberate omissions (the
 // scope): descriptions, examples, deprecation flags, security schemes,
 // servers — they do not affect structural diffing or classification and
 // can be added additively if a later phase needs them.
@@ -122,7 +122,7 @@ data class SchemaNode(
     /** REF only: the target pointer, e.g. #/components/schemas/User (ADR-001: resolved for comparison, name preserved for explanation). */
     val refTarget: String?,
     val constraints: Constraints?,
-    /** Whether the schema declares a default value (matters to Phase 2 classification: ADR-001). */
+    /** Whether the schema declares a default value (matters to classification: ADR-001). */
     val defaultPresent: Boolean,
     val location: String,
 ) {

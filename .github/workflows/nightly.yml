@@ -1,4 +1,4 @@
-# Phase 6 nightly pipeline (docs/ci.md) — the expensive verification
+# Nightly pipeline (docs/ci.md) — the expensive verification
 # that has no place on every pull request. Scheduled (plus manual
 # dispatch); every job FAILS the scheduled run on real problems and
 # preserves evidence.

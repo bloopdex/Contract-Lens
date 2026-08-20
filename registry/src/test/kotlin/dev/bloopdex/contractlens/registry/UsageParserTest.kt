@@ -1,4 +1,4 @@
-// Usage-graph adapter tests (Phase 4 groundwork): kaml strict decode,
+// Usage-graph adapter tests: kaml strict decode,
 // typed validation (version, duplicates, selectors, field paths),
 // deterministic merging of duplicate operations, and the failure paths.
 
@@ -14,15 +14,15 @@ private val VALID_USAGE =
     """
     version: 1
     consumers:
-      - id: thornwa-frontend
-        contract: thorn-api
+      - id: example-frontend
+        contract: example-api
         operations:
           - operation: GET /contacts/{id}
             responseFields:
               - email
               - profile.address.city
       - id: OpenWA
-        contract: thorn-api
+        contract: example-api
         operations:
           - operation: "*"
             requestFields:
@@ -35,9 +35,9 @@ class UsageParserTest :
         test("a valid usage graph parses into the typed domain") {
             val graph = UsageParser.parse(VALID_USAGE, "usage.yaml")
             graph.version shouldBe 1
-            graph.records.map { it.consumer } shouldBe listOf("OpenWA", "thornwa-frontend")
-            val frontend = graph.records.first { it.consumer == "thornwa-frontend" }
-            frontend.contract shouldBe "thorn-api"
+            graph.records.map { it.consumer } shouldBe listOf("OpenWA", "example-frontend")
+            val frontend = graph.records.first { it.consumer == "example-frontend" }
+            frontend.contract shouldBe "example-api"
             frontend.operations
                 .single()
                 .selector
@@ -56,7 +56,7 @@ class UsageParserTest :
                 version: 1
                 consumers:
                   - id: c
-                    contract: thorn-api
+                    contract: example-api
                     operations:
                       - operation: GET /users/{id}
                         responseFields: [email]
@@ -76,7 +76,7 @@ class UsageParserTest :
                 version: 1
                 consumers:
                   - id: c
-                    contract: thorn-api
+                    contract: example-api
                     operations:
                       - operation: "*"
                         responseFields: [z, a, z]
@@ -94,7 +94,7 @@ class UsageParserTest :
             val e =
                 shouldThrow<ContractError.RegistrySelectorInvalid> {
                     UsageParser.parse(
-                        "version: 1\nconsumers:\n  - id: c\n    contract: thorn-api\n    operations:\n      - operation: GET\n",
+                        "version: 1\nconsumers:\n  - id: c\n    contract: example-api\n    operations:\n      - operation: GET\n",
                         "usage.yaml",
                     )
                 }
@@ -104,7 +104,7 @@ class UsageParserTest :
         test("an invalid field path fails with a typed error") {
             shouldThrow<ContractError.UsageInvalid> {
                 UsageParser.parse(
-                    "version: 1\nconsumers:\n  - id: c\n    contract: thorn-api\n    operations:\n      - operation: \"*\"\n        responseFields: [\".email\"]\n",
+                    "version: 1\nconsumers:\n  - id: c\n    contract: example-api\n    operations:\n      - operation: \"*\"\n        responseFields: [\".email\"]\n",
                     "usage.yaml",
                 )
             }
@@ -114,7 +114,7 @@ class UsageParserTest :
             val e =
                 shouldThrow<ContractError.UsageDuplicateRecord> {
                     UsageParser.parse(
-                        "version: 1\nconsumers:\n  - id: c\n    contract: thorn-api\n    operations: []\n  - id: c\n    contract: thorn-api\n    operations: []\n",
+                        "version: 1\nconsumers:\n  - id: c\n    contract: example-api\n    operations: []\n  - id: c\n    contract: example-api\n    operations: []\n",
                         "usage.yaml",
                     )
                 }

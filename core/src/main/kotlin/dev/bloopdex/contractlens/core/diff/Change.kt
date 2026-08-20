@@ -1,4 +1,4 @@
-// Structural change model (Phase 0's canonical Change model, Phase 2).
+// Structural change model (the canonical change taxonomy).
 //
 // A ContractChange is a STRUCTURAL FACT: what changed, where (logical
 // location + physical source location), from what, to what, and a
@@ -76,7 +76,7 @@ data class ContractChange(
     val from: ChangeValue?,
     val to: ChangeValue?,
     /**
-     * Breaking / non-breaking / review. Phase 2 leaves this null on
+     * Breaking / non-breaking / review. The diff engine leaves this null on
      * every change — the classifier (later phase) fills it.
      */
     val verdict: String? = null,

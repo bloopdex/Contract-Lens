@@ -1,4 +1,4 @@
-// Structural diff engine unit tests: every rule in the Phase 2 scope
+// Structural diff engine unit tests: every rule in the documented scope
 // gets at least one case here; the fixture corpus (in :cli) covers the
 // same rules end-to-end through real OpenAPI documents.
 

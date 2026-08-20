@@ -124,10 +124,10 @@ class SignalBuilderTest :
                             ConsumerImpact(
                                 consumer =
                                     Consumer(
-                                        id = "thornwa-frontend",
+                                        id = "example-frontend",
                                         kind = ConsumerKind.FRONTEND,
                                         contract = "users",
-                                        selectors = listOf(parseSelector("thornwa-frontend", "*")),
+                                        selectors = listOf(parseSelector("example-frontend", "*")),
                                     ),
                                 changes =
                                     listOf(
@@ -147,7 +147,7 @@ class SignalBuilderTest :
                 )
             val signal = build(impact = impact)
             val consumer = signal.consumers!!.single()
-            consumer.id shouldBe "thornwa-frontend"
+            consumer.id shouldBe "example-frontend"
             consumer.kind shouldBe "frontend"
             consumer.affectedChanges shouldBe 2
             consumer.breakingChanges shouldBe 1
@@ -163,10 +163,10 @@ class SignalBuilderTest :
                             ConsumerImpact(
                                 consumer =
                                     Consumer(
-                                        id = "thornwa-frontend",
+                                        id = "example-frontend",
                                         kind = ConsumerKind.FRONTEND,
                                         contract = "users",
-                                        selectors = listOf(parseSelector("thornwa-frontend", "*")),
+                                        selectors = listOf(parseSelector("example-frontend", "*")),
                                     ),
                                 changes =
                                     listOf(

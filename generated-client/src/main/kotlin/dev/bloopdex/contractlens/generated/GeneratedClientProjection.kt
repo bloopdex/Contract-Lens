@@ -1,13 +1,13 @@
-// Generated-client projection (Phase 4, ADR-006 on the Phase 4 page).
+// Generated-client projection (ADR-006).
 //
 // ADR-006 decision: diff the SOURCE OF TRUTH with generator knowledge —
 // the generated client is a deterministic function of the OpenAPI spec,
 // so this adapter projects a canonical contract surface into the shape
 // a generated client exposes (method names, merged request objects,
 // normalized return type) and feeds that projection to the SHARED
-// Phase 2 diff engine. Parsing generated TS/Java/Kotlin OUTPUT was
+// structural diff engine. Parsing generated TS/Java/Kotlin OUTPUT was
 // rejected: cross-language parsing is fragile and duplicates the
-// static-analysis territory Phase 0 assigned to BlastRadius.
+// static-analysis territory the sibling project BlastRadius covers.
 //
 // Projection rules (deterministic, style-stable at this depth):
 //   - every operation becomes a client method: "client.<name>" where

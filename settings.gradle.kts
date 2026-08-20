@@ -1,11 +1,11 @@
-// ContractLens multi-module layout (ContractLens / Phase 1 - Core Foundation):
+// ContractLens multi-module layout:
 //   :core             — canonical contract model, normalization, errors (no IO, no CLI)
 //   :openapi-parser   — OpenAPI 3.0/3.1 -> canonical model adapter (swagger-parser is an internal detail)
 //   :snapshot-store   — file-backed snapshot persistence, indexing, integrity verification
 //   :registry         — consumer registry YAML adapter (kaml -> validated domain model)
 //   :generated-client — OpenAPI surface -> generated-client projection (ADR-006)
-//   :graphql          — GraphQL SDL -> canonical model adapter (Phase 4 groundwork)
-//   :json-schema      — JSON Schema event -> canonical model adapter (Phase 4 groundwork)
+//   :graphql          — GraphQL SDL -> canonical model adapter (extension format)
+//   :json-schema      — JSON Schema event -> canonical model adapter (extension format)
 //   :cli              — the contractlens executable (Clikt), structured logging, exit codes
 //
 // Dependency direction is strictly inward: cli -> snapshot-store -> core,
@@ -22,6 +22,6 @@ rootProject.name = "contractlens"
 
 include(":core", ":openapi-parser", ":snapshot-store", ":registry", ":generated-client", ":graphql", ":json-schema", ":cli")
 include(":benchmark")
-// Phase 6 (workstream B): coverage-guided fuzz targets (Jazzer). Test-only
+// Coverage-guided fuzz targets (Jazzer). Test-only
 // module — no main sources, no coverage gate.
 include(":fuzz")

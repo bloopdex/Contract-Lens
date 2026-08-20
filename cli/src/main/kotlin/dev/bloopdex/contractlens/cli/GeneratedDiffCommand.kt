@@ -1,9 +1,9 @@
 // `contractlens generated-diff <old-snapshot> <new-snapshot> --style ts|kotlin|java`
-// — the Phase 4 generated-client workflow (ADR-006): both snapshots are
+// — the generated-client workflow (ADR-006): both snapshots are
 // projected through deterministic generator conventions into generated
 // client surfaces (client method names, merged request objects,
-// normalized return type) and diffed with the SHARED Phase 2 engine.
-// `--classify` runs the Phase 4 classifier over the projected change set
+// normalized return type) and diffed with the SHARED structural diff engine.
+// `--classify` runs the classifier over the projected change set
 // (exit 1 on breaking); plain output is structural only.
 //
 // Honesty: the projection is convention-stable generator knowledge, not
@@ -69,7 +69,7 @@ class GeneratedDiffCommand : BaseCommand(name = "generated-diff") {
     private val jsonOut by option("--json", help = "Machine-readable JSON report on stdout").flag()
 
     private val classifyOut by
-        option("--classify", help = "Classify changes with the Phase 0 ruleset; exit 1 on breaking")
+        option("--classify", help = "Classify changes with the breaking / non-breaking / review ruleset; exit 1 on breaking")
             .flag()
 
     override fun runCommand() {

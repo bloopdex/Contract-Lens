@@ -1,4 +1,4 @@
-// The classifier layer (Phase 0 ADR-001 ruleset, implemented Phase 4).
+// The classifier layer (ADR-001 ruleset).
 //
 // Pure functions over the change set and the two surfaces (used only
 // for the two documented contextual lookups: requiredness of an added

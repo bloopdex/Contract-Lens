@@ -1,9 +1,9 @@
-// The structural diff engine (Phase 2).
+// The structural diff engine.
 //
 // Two canonical contract surfaces in, one deterministic change list out.
 // Pure functions over the canonical model: no IO, no CLI, no consumer
 // knowledge, no verdicts (the classifier layer owns those). Matching
-// uses the Phase 0 identity rules — operations by (method, normalized
+// uses the canonical identity rules — operations by (method, normalized
 // path template), parameters by (in, name), responses by normalized
 // status key — never operationIds, positions, or object ordering.
 //
@@ -11,7 +11,7 @@
 // TYPE_CHANGED at "... → properties.profile → properties.address →
 // properties.postalCode"), never as one generic "schema changed" event.
 // Renames are NOT interpreted: a removed field and an added field are
-// two independent structural facts (Phase 0: renames are review
+// two independent structural facts (renames are review
 // candidates, never auto-classified).
 
 package dev.bloopdex.contractlens.core.diff

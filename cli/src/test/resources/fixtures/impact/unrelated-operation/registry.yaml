@@ -1,6 +1,6 @@
 version: 1
 consumers:
-  - id: thornwa-frontend
+  - id: example-frontend
     kind: frontend
     contract: fixture
     operations:

@@ -1,4 +1,4 @@
-// JSON Schema event adapter tests (Phase 4 groundwork): the documented
+// JSON Schema event adapter tests: the documented
 // mapping — the document becomes one event operation with a "schema"
 // response — plus properties/required/enum/items/constraints/nullability,
 // ref handling, and the failure paths.

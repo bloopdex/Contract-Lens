@@ -2,14 +2,14 @@ plugins {
     kotlin("jvm") version "2.2.0" apply false
     kotlin("plugin.serialization") version "2.2.0" apply false
     id("org.jlleitschuh.gradle.ktlint") version "12.1.2" apply false
-    // Phase 5 coverage gate: aggregate Kover reports across all modules.
+    // Coverage gate: aggregate Kover reports across all modules.
     id("org.jetbrains.kotlinx.kover") version "0.9.9" apply false
-    // Phase 6 (ADR-007): the fat JAR is the primary release artifact.
+    // (ADR-007): the fat JAR is the primary release artifact.
     // 9.4.3 is the latest plugin-portal release for Gradle 9 (min 9.0).
     id("com.gradleup.shadow") version "9.4.3" apply false
 }
 
-// Phase 6 OSV-scan fixes for the BUILDSRIPT classpath (the subproject
+// OSV-scan fixes for the BUILDSRIPT classpath (the subproject
 // resolution rules below do not cover it): the ktlint Gradle plugin's
 // own graph resolves log4j-api 2.26.0 (GHSA-qv9r-c865-cp47, fixed
 // 2.26.1) and commons-lang3 3.17.0 (GHSA-j288-q9x7-2f5v, fixed 3.18.0).
@@ -49,7 +49,7 @@ subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
     apply(plugin = "org.jetbrains.kotlinx.kover")
 
-    // Phase 6 supply-chain discipline: every configuration resolves
+    // Supply-chain discipline: every configuration resolves
     // against a committed gradle.lockfile (regenerate deliberately with
     // `gradlew dependencies --write-locks`, never by hand). Integrity of
     // the resolved artifacts is enforced in CI with
@@ -60,7 +60,7 @@ subprojects {
         lockAllConfigurations()
     }
 
-    // Phase 6 OSV-scan fixes (docs/security.md): lift known-vulnerable
+    // OSV-scan fixes (docs/security.md): lift known-vulnerable
     // dependency versions WITHOUT touching anything already newer.
     //   - jackson-core/databind < 2.21.4 -> 2.21.5: the swagger-parser
     //     2.1.44 graph still pins 2.21.1, which carries several GHSAs
@@ -124,7 +124,7 @@ subprojects {
     }
 }
 
-// Phase 5 coverage: aggregate XML/HTML reports at the root; the
+// Aggregate XML/HTML reports at the root; the
 // verification gate is the plugin's koverVerify task with per-module
 // rules below (bounds set after measuring the baseline — rationale in
 // docs/coverage.md).

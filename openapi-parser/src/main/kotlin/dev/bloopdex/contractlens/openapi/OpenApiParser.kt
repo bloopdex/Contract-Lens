@@ -56,7 +56,7 @@ class OpenApiParser {
     private fun readText(path: Path): String {
         if (!Files.exists(path)) throw ContractError.FileNotFound(path.toString())
         // Size guard BEFORE reading: pathological documents fail with a
-        // typed error instead of exhausting memory (Phase 5 resource limits).
+        // typed error instead of exhausting memory (resource limits).
         val size =
             try {
                 Files.size(path)

@@ -1,6 +1,6 @@
 // The fixture corpus: every structural rule has an old/new OpenAPI pair
 // plus an expected change projection (kind, target, location, from, to).
-// The pair is parsed through the REAL parser (Phase 1 adapter) and
+// The pair is parsed through the REAL parser adapter and
 // diffed with the REAL engine — an end-to-end regression suite. The
 // expected files are reviewed like code: they change only when a rule
 // deliberately changes.

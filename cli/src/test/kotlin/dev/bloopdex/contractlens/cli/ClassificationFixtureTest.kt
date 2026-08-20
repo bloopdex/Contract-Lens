@@ -1,4 +1,4 @@
-// The Phase 4 classification fixture corpus: the Phase 0 14-case
+// The classification fixture corpus: the 14-case
 // catalog (plus the derived kinds) as end-to-end pairs — real parser,
 // real engine, real classifier, expected verdicts and semver labels.
 // Expected files are reviewed like code: they change only when a rule

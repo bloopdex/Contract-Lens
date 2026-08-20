@@ -1,4 +1,4 @@
-// Classifier unit tests (Phase 4): every ADR-001 rule is pinned here
+// Classifier unit tests: every ADR-001 rule is pinned here
 // with hand-written changes, including the two surface-contextual rules
 // (added-parameter requiredness, default-softened required properties)
 // and the conservative fallbacks. Direction comes from the engine's

@@ -1,4 +1,4 @@
-// Snapshot format v1 (Phase 0, ADR-003).
+// Snapshot format v1 (ADR-003).
 //
 // A snapshot is the canonical contract surface plus identity and
 // integrity metadata. The `contentHash` covers exactly the

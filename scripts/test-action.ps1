@@ -1,6 +1,6 @@
 # End-to-end test of the reusable pre-merge Action (action.yml) — the
 # locally executable equivalent of "the Action blocks a breaking PR in
-# a sample repo" (Phase 6 page). Runs scripts/action-check.ps1 against
+# a sample repo". Runs scripts/action-check.ps1 against
 # a generated sample pair, exactly as the Action would invoke it:
 #
 #   1. pass case: an additive (non-breaking) change → exit 0,

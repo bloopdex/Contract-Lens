@@ -1,9 +1,9 @@
 // contractlens CLI entry point.
 //
-// Exit code contract (Architecture page, Phase 0):
+// Exit code contract:
 //   0 - success (no breaking changes, or no classification requested)
-//   1 - breaking changes detected (produced by the Phase 4 classifier:
-//       `diff --classify` and `impact`)
+//   1 - breaking changes detected (produced by the classifier:
+//       `diff --classify`, `impact`, `generated-diff --classify`, `signal`)
 //   2 - operational/error condition (bad usage, bad input, IO errors,
 //       corrupt snapshots)
 //
@@ -44,7 +44,7 @@ abstract class BaseCommand(
     /** Set by commands that classify changes; main() maps it to exit 1. */
     var breakingFound = false
 
-    /** Structured metrics (Phase 5) go through the JSON log encoder on stderr. */
+    /** Structured metrics go through the JSON log encoder on stderr. */
     protected val log = LoggerFactory.getLogger(javaClass)
 
     override fun run() {
@@ -65,7 +65,7 @@ class ContractLensCommand : NoOpCliktCommand(name = "contractlens") {
 
 /**
  * The version line for a bare `--version` request, else null.
- * --version (Phase 6, ADR-007) is reported from the generated constant
+ * --version (ADR-007) is reported from the generated constant
  * whose single authoritative source is `version` in the root
  * build.gradle.kts; handled before Clikt so its behavior is explicit
  * (stdout, exit 0, nothing else).
@@ -98,7 +98,7 @@ fun main(args: Array<String>) {
         // --help: the help text has been printed; nothing to add.
     } catch (e: CliktError) {
         // Usage errors are operational: the contract reserves exit 1 for
-        // breaking changes (Phase 4 classifier). Clikt normally prints
+        // breaking changes (the classifier). Clikt normally prints
         // the usage message itself; when it does not (non-interactive
         // terminals), the error must never be silent.
         System.err.println("error [USAGE]: ${e.message ?: e.javaClass.simpleName}")

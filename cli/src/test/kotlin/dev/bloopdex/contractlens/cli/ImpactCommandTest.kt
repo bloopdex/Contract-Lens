@@ -1,4 +1,4 @@
-// `contractlens impact` CLI tests (Phase 3): the full snapshot -> diff ->
+// `contractlens impact` CLI tests: the full snapshot -> diff ->
 // registry -> mapping workflow, JSON output, the honesty boundary in the
 // human report, and every failure path (registry corruption, contract
 // mismatch, missing files).
@@ -20,7 +20,7 @@ private fun specWithEmail() =
     """
     openapi: 3.0.3
     info:
-      title: Thorn API
+      title: Example API
       version: 1.0.0
     paths:
       /users/{id}:
@@ -62,7 +62,7 @@ private fun specWithoutEmail() =
     """
     openapi: 3.0.3
     info:
-      title: Thorn API
+      title: Example API
       version: 1.0.0
     paths:
       /users/{id}:
@@ -137,9 +137,9 @@ class ImpactCommandTest :
                 """
                 version: 1
                 consumers:
-                  - id: thornwa-frontend
+                  - id: example-frontend
                     kind: frontend
-                    contract: thorn-api
+                    contract: example-api
                     operations:
                       - GET /users/{id}
                 """.trimIndent(),
@@ -147,8 +147,8 @@ class ImpactCommandTest :
 
         test("the full workflow maps a change to its declared consumer and classifies it") {
             val dir = Files.createTempDirectory("contractlens-impact")
-            val oldSnapshot = capture(dir, specWithEmail(), "thorn-api", sha)
-            val newSnapshot = capture(dir, specWithoutEmail(), "thorn-api", "e".repeat(40))
+            val oldSnapshot = capture(dir, specWithEmail(), "example-api", sha)
+            val newSnapshot = capture(dir, specWithoutEmail(), "example-api", "e".repeat(40))
             // A response property was removed: the classifier says
             // breaking, which main() maps to exit 1 (the reserved code).
             val result =
@@ -161,7 +161,7 @@ class ImpactCommandTest :
             result.stdout shouldContain "semver: major"
             result.stdout shouldContain "registered consumers: 1"
             result.stdout shouldContain "affected consumers: 1"
-            result.stdout shouldContain "consumer thornwa-frontend (frontend)"
+            result.stdout shouldContain "consumer example-frontend (frontend)"
             result.stdout shouldContain "PROPERTY_REMOVED"
             result.stdout shouldContain "[breaking] (major)"
             result.stdout shouldContain "verdict: the response no longer guarantees a property consumers may read"
@@ -171,8 +171,8 @@ class ImpactCommandTest :
 
         test("--json emits the versioned report and preserves the change set") {
             val dir = Files.createTempDirectory("contractlens-impact")
-            val oldSnapshot = capture(dir, specWithEmail(), "thorn-api", sha)
-            val newSnapshot = capture(dir, specWithoutEmail(), "thorn-api", "e".repeat(40))
+            val oldSnapshot = capture(dir, specWithEmail(), "example-api", sha)
+            val newSnapshot = capture(dir, specWithoutEmail(), "example-api", "e".repeat(40))
             val result =
                 ImpactCommand().test(
                     arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--registry", wildcardRegistry(dir).toString(), "--json"),
@@ -194,14 +194,14 @@ class ImpactCommandTest :
                 .verdict shouldBe dev.bloopdex.contractlens.core.classify.Verdict.BREAKING
             report.impacts
                 .single()
-                .consumer.id shouldBe "thornwa-frontend"
+                .consumer.id shouldBe "example-frontend"
             report.note shouldContain "unregistered consumers"
         }
 
         test("an identical diff reports zero affected consumers but keeps the honesty note") {
             val dir = Files.createTempDirectory("contractlens-impact")
-            val oldSnapshot = capture(dir, specWithEmail(), "thorn-api", sha)
-            val newSnapshot = capture(dir, specWithEmail(), "thorn-api", "e".repeat(40))
+            val oldSnapshot = capture(dir, specWithEmail(), "example-api", sha)
+            val newSnapshot = capture(dir, specWithEmail(), "example-api", "e".repeat(40))
             val result =
                 ImpactCommand().test(
                     arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--registry", wildcardRegistry(dir).toString()),
@@ -214,8 +214,8 @@ class ImpactCommandTest :
 
         test("unmapped changes stay visible in the human report") {
             val dir = Files.createTempDirectory("contractlens-impact")
-            val oldSnapshot = capture(dir, specWithEmail(), "thorn-api", sha)
-            val newSnapshot = capture(dir, specWithoutHealth(), "thorn-api", "e".repeat(40))
+            val oldSnapshot = capture(dir, specWithEmail(), "example-api", sha)
+            val newSnapshot = capture(dir, specWithoutHealth(), "example-api", "e".repeat(40))
             val result =
                 ImpactCommand().test(
                     arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--registry", wildcardRegistry(dir).toString()),
@@ -244,8 +244,8 @@ class ImpactCommandTest :
 
         test("a malformed registry fails with a typed error") {
             val dir = Files.createTempDirectory("contractlens-impact")
-            val oldSnapshot = capture(dir, specWithEmail(), "thorn-api", sha)
-            val newSnapshot = capture(dir, specWithoutEmail(), "thorn-api", "e".repeat(40))
+            val oldSnapshot = capture(dir, specWithEmail(), "example-api", sha)
+            val newSnapshot = capture(dir, specWithoutEmail(), "example-api", "e".repeat(40))
             val badRegistry = registryFile(dir, "version: 1\nconsumers: [\n")
             val e =
                 shouldThrow<ContractError.RegistryInvalid> {
@@ -258,8 +258,8 @@ class ImpactCommandTest :
 
         test("a registry with duplicate consumer ids fails with a typed error") {
             val dir = Files.createTempDirectory("contractlens-impact")
-            val oldSnapshot = capture(dir, specWithEmail(), "thorn-api", sha)
-            val newSnapshot = capture(dir, specWithoutEmail(), "thorn-api", "e".repeat(40))
+            val oldSnapshot = capture(dir, specWithEmail(), "example-api", sha)
+            val newSnapshot = capture(dir, specWithoutEmail(), "example-api", "e".repeat(40))
             val dupRegistry =
                 registryFile(
                     dir,
@@ -268,11 +268,11 @@ class ImpactCommandTest :
                     consumers:
                       - id: dup
                         kind: frontend
-                        contract: thorn-api
+                        contract: example-api
                         operations: ["*"]
                       - id: dup
                         kind: frontend
-                        contract: thorn-api
+                        contract: example-api
                         operations: ["*"]
                     """.trimIndent(),
                 )
@@ -287,8 +287,8 @@ class ImpactCommandTest :
 
         test("a missing registry file is a usage error") {
             val dir = Files.createTempDirectory("contractlens-impact")
-            val oldSnapshot = capture(dir, specWithEmail(), "thorn-api", sha)
-            val newSnapshot = capture(dir, specWithoutEmail(), "thorn-api", "e".repeat(40))
+            val oldSnapshot = capture(dir, specWithEmail(), "example-api", sha)
+            val newSnapshot = capture(dir, specWithoutEmail(), "example-api", "e".repeat(40))
             val result =
                 ImpactCommand().test(
                     arrayOf(oldSnapshot.toString(), newSnapshot.toString(), "--registry", dir.resolve("missing.yaml").toString()),
@@ -299,8 +299,8 @@ class ImpactCommandTest :
 
         test("a missing --registry option is a usage error") {
             val dir = Files.createTempDirectory("contractlens-impact")
-            val oldSnapshot = capture(dir, specWithEmail(), "thorn-api", sha)
-            val newSnapshot = capture(dir, specWithoutEmail(), "thorn-api", "e".repeat(40))
+            val oldSnapshot = capture(dir, specWithEmail(), "example-api", sha)
+            val newSnapshot = capture(dir, specWithoutEmail(), "example-api", "e".repeat(40))
             val result = ImpactCommand().test(arrayOf(oldSnapshot.toString(), newSnapshot.toString()))
             result.statusCode shouldBe 1
         }

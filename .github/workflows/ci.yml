@@ -1,11 +1,11 @@
-# Phase 6 CI architecture (docs/ci.md) — pull requests and pushes to
+# CI architecture (docs/ci.md) — pull requests and pushes to
 # main. Every job below is BLOCKING; the expensive verification
 # (long fuzz sweeps, coverage-guided fuzzing, full benchmark
 # comparisons, action e2e) runs in nightly.yml.
 #
 # Job split rationale (measured locally, 2026-08-19):
 #   - build+test: the full suite is the correctness gate; the 2x2
-#     matrix (both supported JVMs on both OSes) is the Phase 1 job
+#     matrix (both supported JVMs on both OSes) is the original compatibility job
 #     kept intact.
 #   - coverage/lint: separate jobs make each failure diagnosable.
 #   - security: dependency-verification strict + OSV scan (lockfiles
@@ -19,7 +19,7 @@
 #
 # NOTE (honest): this workflow only executes once the repository is
 # pushed to a GitHub host — no remote is configured yet (hosting is an
-# open BloopLab decision). Every command here has been executed
+# open hosting decision). Every command here has been executed
 # locally with the results recorded in docs/ci.md.
 
 name: CI

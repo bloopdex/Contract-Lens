@@ -1,4 +1,4 @@
-// Registry adapter tests (Phase 3). kaml decodes the YAML document, and
+// Registry adapter tests. kaml decodes the YAML document, and
 // every decode-level failure becomes a typed ContractError. Unknown
 // fields fail (kaml strict mode — a deliberate policy: future fields
 // must come with a version bump, never be silently ignored), malformed
@@ -17,9 +17,9 @@ private val VALID_REGISTRY =
     """
     version: 1
     consumers:
-      - id: thornwa-frontend
+      - id: example-frontend
         kind: frontend
-        contract: thorn-api
+        contract: example-api
         operations:
           - GET /contacts/{id}
           - POST /contacts
@@ -27,7 +27,7 @@ private val VALID_REGISTRY =
         notes: main UI
       - id: OpenWA
         kind: service
-        contract: thorn-api
+        contract: example-api
         operations:
           - "*"
     """.trimIndent()
@@ -38,8 +38,8 @@ class RegistryParserTest :
         test("a valid registry parses into the typed domain") {
             val registry = RegistryParser.parse(VALID_REGISTRY, "registry.yaml")
             registry.version shouldBe 1
-            registry.consumers.map { it.id } shouldBe listOf("OpenWA", "thornwa-frontend")
-            val frontend = registry.consumers.first { it.id == "thornwa-frontend" }
+            registry.consumers.map { it.id } shouldBe listOf("OpenWA", "example-frontend")
+            val frontend = registry.consumers.first { it.id == "example-frontend" }
             frontend.kind shouldBe ConsumerKind.FRONTEND
             frontend.contact shouldBe "frontend-team@example.com"
             frontend.selectors.map { it.raw } shouldBe listOf("GET /contacts/{id}", "POST /contacts")
@@ -91,7 +91,7 @@ class RegistryParserTest :
             val e =
                 shouldThrow<ContractError.RegistryInvalid> {
                     RegistryParser.parse(
-                        "version: 1\nconsumers:\n  - id: c\n    kind: service\n    contract: thorn-api\n    operations: [\"*\"]\n    owner: x\n",
+                        "version: 1\nconsumers:\n  - id: c\n    kind: service\n    contract: example-api\n    operations: [\"*\"]\n    owner: x\n",
                         "registry.yaml",
                     )
                 }
@@ -126,11 +126,11 @@ class RegistryParserTest :
                         consumers:
                           - id: dup
                             kind: service
-                            contract: thorn-api
+                            contract: example-api
                             operations: ["*"]
                           - id: dup
                             kind: service
-                            contract: thorn-api
+                            contract: example-api
                             operations: ["*"]
                         """.trimIndent(),
                         "registry.yaml",
@@ -143,7 +143,7 @@ class RegistryParserTest :
             val e =
                 shouldThrow<ContractError.RegistrySelectorInvalid> {
                     RegistryParser.parse(
-                        "version: 1\nconsumers:\n  - id: c\n    kind: service\n    contract: thorn-api\n    operations: [\"GET\"]\n",
+                        "version: 1\nconsumers:\n  - id: c\n    kind: service\n    contract: example-api\n    operations: [\"GET\"]\n",
                         "registry.yaml",
                     )
                 }
@@ -158,23 +158,23 @@ class RegistryParserTest :
             val reordered =
                 """
                 consumers:
-                  - id: thornwa-frontend
+                  - id: example-frontend
                     operations:
                       - GET /contacts/{id}
                       - POST /contacts
                     notes: main UI
                     contact: frontend-team@example.com
-                    contract: thorn-api
+                    contract: example-api
                     kind: frontend
                 version: 1
                 """.trimIndent()
-            val first = RegistryParser.parse(VALID_REGISTRY, "registry.yaml").consumers.first { it.id == "thornwa-frontend" }
-            val second = RegistryParser.parse(reordered, "registry.yaml").consumers.first { it.id == "thornwa-frontend" }
+            val first = RegistryParser.parse(VALID_REGISTRY, "registry.yaml").consumers.first { it.id == "example-frontend" }
+            val second = RegistryParser.parse(reordered, "registry.yaml").consumers.first { it.id == "example-frontend" }
             first shouldBe second
         }
 
         test("flow-style operation lists parse like block lists") {
-            val flow = "version: 1\nconsumers:\n  - {id: c, kind: service, contract: thorn-api, operations: [\"*\"]}\n"
+            val flow = "version: 1\nconsumers:\n  - {id: c, kind: service, contract: example-api, operations: [\"*\"]}\n"
             RegistryParser
                 .parse(flow, "registry.yaml")
                 .consumers

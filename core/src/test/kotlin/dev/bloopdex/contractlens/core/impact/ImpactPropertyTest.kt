@@ -1,4 +1,4 @@
-// Property-based invariants of the consumer mapper (Phase 3):
+// Property-based invariants of the consumer mapper:
 //   1. determinism — identical inputs, identical reports
 //   2. registry ordering invariance — consumer order is semantically irrelevant
 //   3. no phantom consumers — every reported consumer exists in the registry
@@ -86,7 +86,7 @@ class ImpactPropertyTest :
                 Consumer(
                     id = id,
                     kind = ConsumerKind.FRONTEND,
-                    contract = "thorn-api",
+                    contract = "example-api",
                     selectors = selectors.map { parseSelector(id, it) },
                 )
             }
@@ -98,20 +98,20 @@ class ImpactPropertyTest :
 
         test("determinism: mapping the same inputs twice yields identical reports") {
             checkAll(Arb.list(changeArb(), 0..6), registryArb()) { changes: List<ContractChange>, registry: ConsumerRegistry ->
-                ConsumerMapper.map(changes, registry, "thorn-api") shouldBe ConsumerMapper.map(changes, registry, "thorn-api")
+                ConsumerMapper.map(changes, registry, "example-api") shouldBe ConsumerMapper.map(changes, registry, "example-api")
             }
         }
 
         test("registry ordering invariance: consumer order does not change the report") {
             checkAll(Arb.list(changeArb(), 0..6), registryArb()) { changes: List<ContractChange>, registry: ConsumerRegistry ->
                 val reversed = ConsumerRegistry(registry.version, registry.consumers.reversed())
-                ConsumerMapper.map(changes, reversed, "thorn-api") shouldBe ConsumerMapper.map(changes, registry, "thorn-api")
+                ConsumerMapper.map(changes, reversed, "example-api") shouldBe ConsumerMapper.map(changes, registry, "example-api")
             }
         }
 
         test("no phantom consumers: every reported consumer exists in the registry") {
             checkAll(Arb.list(changeArb(), 0..6), registryArb()) { changes: List<ContractChange>, registry: ConsumerRegistry ->
-                val report = ConsumerMapper.map(changes, registry, "thorn-api")
+                val report = ConsumerMapper.map(changes, registry, "example-api")
                 report.impacts.forEach { impact ->
                     (impact.consumer in registry.consumers) shouldBe true
                 }
@@ -120,7 +120,7 @@ class ImpactPropertyTest :
 
         test("no phantom changes: every reported change comes from the input set") {
             checkAll(Arb.list(changeArb(), 0..6), registryArb()) { changes: List<ContractChange>, registry: ConsumerRegistry ->
-                val report = ConsumerMapper.map(changes, registry, "thorn-api")
+                val report = ConsumerMapper.map(changes, registry, "example-api")
                 report.changes shouldBe changes.sortedWith(changeOrder)
                 report.impacts
                     .flatMap { it.changes.map { entry -> entry.change } }
@@ -131,15 +131,15 @@ class ImpactPropertyTest :
         test("deduplication: duplicating a change in the input does not duplicate impacts") {
             checkAll(changeArb(), registryArb()) { change: ContractChange, registry: ConsumerRegistry ->
                 val doubled = listOf(change, change)
-                ConsumerMapper.map(doubled, registry, "thorn-api").impacts shouldBe
-                    ConsumerMapper.map(listOf(change), registry, "thorn-api").impacts
+                ConsumerMapper.map(doubled, registry, "example-api").impacts shouldBe
+                    ConsumerMapper.map(listOf(change), registry, "example-api").impacts
             }
         }
 
         test("idempotence: mapping a report's own changes again yields the same impacts") {
             checkAll(Arb.list(changeArb(), 0..6), registryArb()) { changes: List<ContractChange>, registry: ConsumerRegistry ->
-                val once = ConsumerMapper.map(changes, registry, "thorn-api")
-                val twice = ConsumerMapper.map(once.changes, registry, "thorn-api")
+                val once = ConsumerMapper.map(changes, registry, "example-api")
+                val twice = ConsumerMapper.map(once.changes, registry, "example-api")
                 twice.impacts shouldBe once.impacts
             }
         }

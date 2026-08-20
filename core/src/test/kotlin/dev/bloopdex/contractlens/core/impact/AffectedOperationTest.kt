@@ -1,4 +1,4 @@
-// affectedOperations() grammar tests (Phase 3): the derivation of the
+// affectedOperations() grammar tests: the derivation of the
 // changed operation's canonical identity from the engine's pinned
 // location grammar. Locations outside the grammar yield no operation —
 // never a crash, never a guessed match.

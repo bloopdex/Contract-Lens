@@ -1,9 +1,9 @@
-// GraphQL SDL -> canonical model adapter (Phase 4 groundwork).
+// GraphQL SDL -> canonical model adapter.
 //
 // Parses a GraphQL SDL document (graphql-java's SchemaParser, ADR-005
 // philosophy: the mature library, never a hand-rolled parser) and maps
 // it into the canonical ContractSurface so the SHARED diff engine and
-// classifier run unchanged (Phase 0: one canonical model, per-format
+// classifier run unchanged (one canonical model, per-format
 // adapters; ADR-004 deferred GraphQL to its own parser work).
 //
 // Mapping rules (documented groundwork contract):

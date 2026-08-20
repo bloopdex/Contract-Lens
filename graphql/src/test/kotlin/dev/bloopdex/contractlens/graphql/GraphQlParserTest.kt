@@ -1,4 +1,4 @@
-// GraphQL SDL adapter tests (Phase 4 groundwork): the documented
+// GraphQL SDL adapter tests: the documented
 // mapping — query/mutation root fields, arguments as parameters,
 // enums/scalars/objects, recursion guards, nullability — and every
 // failure path with the existing typed error model.

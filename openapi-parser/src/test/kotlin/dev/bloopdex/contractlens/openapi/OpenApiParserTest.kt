@@ -171,7 +171,7 @@ class OpenApiParserTest :
             e.message shouldContain "#/components/schemas/Missing"
         }
 
-        test("rejects remote/multi-file references (Phase 1 limitation)") {
+        test("rejects remote/multi-file references (a recorded limitation)") {
             shouldThrow<ContractError.UnsupportedReference> {
                 parser.parse(fixture("negative/remote-ref.yaml"), "remote")
             }

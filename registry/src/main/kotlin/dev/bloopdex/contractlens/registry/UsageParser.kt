@@ -1,4 +1,4 @@
-// Usage-graph loading adapter (Phase 4 groundwork). Same boundary as
+// Usage-graph loading adapter. Same boundary as
 // RegistryParser: kaml strict-mode decode into the raw shape, then
 // validateUsageGraph() (:core) into the validated typed domain. Raw
 // parser exceptions never leak outward.

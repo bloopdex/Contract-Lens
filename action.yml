@@ -1,5 +1,5 @@
-# ContractLens pre-merge check — reusable composite action (the Phase 6
-# page's "GitHub Action pre-merge check"). Contract in docs/ci.md:
+# ContractLens pre-merge check — reusable composite action (the
+# pre-merge check). Contract in docs/ci.md:
 #
 #   inputs: old-spec, new-spec, registry?, contract-name?,
 #           fail-on-breaking (default true), comment-on-pr (default false)

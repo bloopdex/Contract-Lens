@@ -1,8 +1,8 @@
-// Usage-graph groundwork (Phase 4). The usage graph RECORDS which fields
+// Usage graph. The usage graph RECORDS which fields
 // a consumer actually reads, per operation and direction — the data
-// substrate for future usage-aware classification (Phase 4 follow-up:
+// substrate for future usage-aware classification (integration
 // "warn only when actually-read fields change"). It is deliberately NOT
-// wired into classification or mapping yet: the Phase 4 scope is the
+// wired into classification or mapping yet: the implemented scope is the
 // format, the typed model, and strict validation.
 //
 // Operation selection reuses the registry's canonical OperationSelector

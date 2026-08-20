@@ -1,4 +1,4 @@
-// The Phase 4 generated-client fixture corpus: OpenAPI pairs projected
+// The generated-client fixture corpus: OpenAPI pairs projected
 // through the TS AND Kotlin conventions and diffed with the shared
 // engine. The expected files pin the generated-client-shaped change
 // locations. Both styles share naming conventions at this depth (ADR-006),

@@ -1,6 +1,6 @@
 # ContractLens container (ADR-007) — the fat JAR on a JRE 17 base, for
 # CI/container use. The primary install path is the release JAR; this
-# image exists because the Phase 6 page requires "the Docker image runs
+# image exists because the delivery plan requires "the Docker image runs
 # compare".
 #
 # Build:

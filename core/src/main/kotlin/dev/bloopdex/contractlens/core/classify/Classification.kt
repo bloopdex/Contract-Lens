@@ -1,10 +1,10 @@
-// Classification model (Phase 0, ADR-001; implemented Phase 4).
+// Classification model (ADR-001).
 //
 // The classifier consumes the structural change set and attaches the
 // documented three-verdict model (breaking / non-breaking / review)
 // plus a semver label (major / minor / patch). It is a separate layer:
 // the DiffEngine still answers "what changed", the classifier answers
-// "what does the Phase 0 ruleset say about it", and the verdict stays
+// "what does the classification ruleset say about it", and the verdict stays
 // null in the diff engine's own output.
 //
 // Semver labels derive from verdicts, never independently:

@@ -1,5 +1,5 @@
 // contractlens-signal v1 — the proposed DeployScore feed payload
-// (ADR-008, Phase 6). The full contract lives in docs/deployscore-feed.md.
+// (ADR-008). The full contract lives in docs/deployscore-feed.md.
 //
 // Design constraints, enforced here BY CONSTRUCTION:
 //   - metadata only: counts, verdicts, semver, operation identities

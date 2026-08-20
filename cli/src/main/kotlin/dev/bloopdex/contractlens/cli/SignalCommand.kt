@@ -1,5 +1,5 @@
 // `contractlens signal <old-snapshot> <new-snapshot> [--registry <file>]
-// [--output <file>]` — the Phase 6 DeployScore feed emitter (ADR-008).
+// [--output <file>]` — the DeployScore feed emitter (ADR-008).
 //
 // Runs the normal analysis pipeline (verify → diff → classify →
 // optional impact mapping) and emits the contractlens-signal v1 payload
@@ -8,7 +8,7 @@
 // registry-declared consumer ids — never raw contract content.
 //
 // Deliberately absent: any network integration. DeployScore has no
-// implemented API (its Phase 3/4 define the transport later), so an
+// implemented API (its API/webhook work will define the transport), so an
 // unavailable or nonexistent DeployScore cannot affect local analysis
 // — the analysis completes before emission.
 //

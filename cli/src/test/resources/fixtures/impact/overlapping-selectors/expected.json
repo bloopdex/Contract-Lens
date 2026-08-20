@@ -5,7 +5,7 @@
     "mappedChanges": 1,
     "impacts": [
         {
-            "consumer": "thornwa-frontend",
+            "consumer": "example-frontend",
             "changes": [
                 {
                     "method": "get",

@@ -1,6 +1,5 @@
-// JSON Schema event contract -> canonical model adapter (Phase 4
-// groundwork). ADR-004 deferred JSON Schema event contracts to their own
-// parser work; Phase 0 noted the canonical SchemaNode already covers the
+// JSON Schema event contract -> canonical model adapter. ADR-004 deferred JSON Schema event contracts to their own
+// parser work; the canonical SchemaNode already covers the
 // JSON Schema concepts (type, required, properties, enum, constraints,
 // items, nullability).
 //
@@ -116,7 +115,7 @@ class JsonSchemaParser {
                     location = location,
                 )
             }
-            throw ContractError.InvalidStructure("cross-document \$ref is not supported in Phase 4: '$ref'")
+            throw ContractError.InvalidStructure("cross-document \$ref is not supported: '$ref'")
         }
 
         val typeElement = schema["type"]

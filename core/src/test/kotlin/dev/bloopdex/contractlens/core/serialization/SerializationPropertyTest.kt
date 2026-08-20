@@ -1,5 +1,5 @@
 // Property-based pinning of the two canonicalization invariants
-// (Phase 1 determinism requirement):
+// (the snapshot determinism requirement):
 //   1. canonical(canonical(x)) == canonical(x)          (idempotence)
 //   2. bytes == bytes(parse(bytes))                     (round-trip stability)
 

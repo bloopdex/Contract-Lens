@@ -1,4 +1,4 @@
-// Normalization rules (Phase 0, ADR-001). Every rule here exists so that
+// Normalization rules (ADR-001). Every rule here exists so that
 // equivalent contracts produce equivalent canonical representations and
 // identical canonical JSON (determinism is a pinned invariant).
 

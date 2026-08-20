@@ -1,4 +1,4 @@
-// Consumer mapping unit tests (Phase 3). The mapper consumes a validated
+// Consumer mapping unit tests. The mapper consumes a validated
 // registry and a change set and produces deterministic per-consumer
 // impacts; these tests pin the semantics (contract/operation selection,
 // wildcards, grouping, deduplication, unmatched changes) with
@@ -41,7 +41,7 @@ private fun change(
 
 private fun consumer(
     id: String,
-    contract: String = "thorn-api",
+    contract: String = "example-api",
     selectors: List<String> = listOf("*"),
     kind: ConsumerKind = ConsumerKind.FRONTEND,
 ): Consumer =
@@ -62,12 +62,12 @@ class ConsumerMapperTest :
             val report =
                 ConsumerMapper.map(
                     listOf(c),
-                    registryOf(consumer("thornwa-frontend", selectors = listOf("GET /users/{id}"))),
-                    "thorn-api",
+                    registryOf(consumer("example-frontend", selectors = listOf("GET /users/{id}"))),
+                    "example-api",
                 )
             report.impacts.size shouldBe 1
             val impact = report.impacts.single()
-            impact.consumer.id shouldBe "thornwa-frontend"
+            impact.consumer.id shouldBe "example-frontend"
             val entry = impact.changes.single()
             entry.change shouldBe c
             entry.operation.method shouldBe "get"
@@ -81,8 +81,8 @@ class ConsumerMapperTest :
             val report =
                 ConsumerMapper.map(
                     listOf(c),
-                    registryOf(consumer("thornwa-frontend", selectors = listOf("GET /users/{userId}"))),
-                    "thorn-api",
+                    registryOf(consumer("example-frontend", selectors = listOf("GET /users/{userId}"))),
+                    "example-api",
                 )
             report.impacts.size shouldBe 1
         }
@@ -93,7 +93,7 @@ class ConsumerMapperTest :
                 ConsumerMapper.map(
                     listOf(c),
                     registryOf(consumer("other", contract = "other-api")),
-                    "thorn-api",
+                    "example-api",
                 )
             report.impacts shouldBe emptyList()
             report.changes shouldBe listOf(c)
@@ -105,7 +105,7 @@ class ConsumerMapperTest :
                 ConsumerMapper.map(
                     listOf(c),
                     registryOf(consumer("c", selectors = listOf("POST /users"))),
-                    "thorn-api",
+                    "example-api",
                 )
             report.impacts shouldBe emptyList()
             report.changes shouldBe listOf(c)
@@ -117,7 +117,7 @@ class ConsumerMapperTest :
                     change(ChangeKind.PROPERTY_REMOVED, "GET /users/{id} → response 200 → schema → properties.email", from = "string"),
                     change(ChangeKind.OPERATION_ADDED, "POST /users", to = "POST /users", target = ChangeTarget.OPERATION),
                 )
-            val report = ConsumerMapper.map(changes, registryOf(consumer("wildcard")), "thorn-api")
+            val report = ConsumerMapper.map(changes, registryOf(consumer("wildcard")), "example-api")
             val impact = report.impacts.single()
             impact.changes.size shouldBe 2
             impact.changes.all { it.reason == REASON_ALL_OPERATIONS } shouldBe true
@@ -126,7 +126,7 @@ class ConsumerMapperTest :
         test("multiple changes on one consumer are grouped and sorted by changeOrder") {
             val z = change(ChangeKind.PROPERTY_REMOVED, "GET /z → response 200 → schema → properties.a", from = "string")
             val a = change(ChangeKind.PROPERTY_REMOVED, "GET /a → response 200 → schema → properties.a", from = "string")
-            val report = ConsumerMapper.map(listOf(z, a), registryOf(consumer("wildcard")), "thorn-api")
+            val report = ConsumerMapper.map(listOf(z, a), registryOf(consumer("wildcard")), "example-api")
             report.impacts
                 .single()
                 .changes
@@ -142,7 +142,7 @@ class ConsumerMapperTest :
                         consumer("consumer-a", selectors = listOf("GET /users/{id}")),
                         consumer("consumer-b", selectors = listOf("GET /users/{id}")),
                     ),
-                    "thorn-api",
+                    "example-api",
                 )
             report.impacts.map { it.consumer.id } shouldBe listOf("consumer-a", "consumer-b")
             report.impacts.all { it.changes.single().change == c } shouldBe true
@@ -155,7 +155,7 @@ class ConsumerMapperTest :
                 ConsumerMapper.map(
                     listOf(c),
                     registryOf(consumer("c", selectors = listOf("*", "GET /users/{id}"))),
-                    "thorn-api",
+                    "example-api",
                 )
             report.impacts
                 .single()
@@ -173,7 +173,7 @@ class ConsumerMapperTest :
                 ConsumerMapper.map(
                     listOf(c),
                     registryOf(consumer("c", selectors = listOf("GET /users/{id}", "GET /users/{id}"))),
-                    "thorn-api",
+                    "example-api",
                 )
             report.impacts
                 .single()
@@ -197,7 +197,7 @@ class ConsumerMapperTest :
                         consumer("new-path-consumer", selectors = listOf("GET /accounts/{id}")),
                         consumer("both-consumer", selectors = listOf("GET /users/{id}", "GET /accounts/{id}")),
                     ),
-                    "thorn-api",
+                    "example-api",
                 )
             val byId = report.impacts.associateBy { it.consumer.id }
             byId["old-path-consumer"]!!
@@ -213,7 +213,7 @@ class ConsumerMapperTest :
 
         test("an operation removal maps to consumers of the removed operation") {
             val c = change(ChangeKind.OPERATION_REMOVED, "POST /users", from = "POST /users", target = ChangeTarget.OPERATION)
-            val report = ConsumerMapper.map(listOf(c), registryOf(consumer("c", selectors = listOf("POST /users"))), "thorn-api")
+            val report = ConsumerMapper.map(listOf(c), registryOf(consumer("c", selectors = listOf("POST /users"))), "example-api")
             report.impacts
                 .single()
                 .changes
@@ -223,7 +223,7 @@ class ConsumerMapperTest :
 
         test("an operation addition maps to consumers of the added operation") {
             val c = change(ChangeKind.OPERATION_ADDED, "POST /users", to = "POST /users", target = ChangeTarget.OPERATION)
-            val report = ConsumerMapper.map(listOf(c), registryOf(consumer("c", selectors = listOf("POST /users"))), "thorn-api")
+            val report = ConsumerMapper.map(listOf(c), registryOf(consumer("c", selectors = listOf("POST /users"))), "example-api")
             report.impacts
                 .single()
                 .changes
@@ -233,7 +233,7 @@ class ConsumerMapperTest :
 
         test("a change with a location outside the engine grammar maps to nothing but stays visible") {
             val c = change(ChangeKind.PROPERTY_REMOVED, "not-a-location")
-            val report = ConsumerMapper.map(listOf(c), registryOf(consumer("wildcard")), "thorn-api")
+            val report = ConsumerMapper.map(listOf(c), registryOf(consumer("wildcard")), "example-api")
             report.impacts shouldBe emptyList()
             report.changes shouldBe listOf(c)
         }
@@ -245,7 +245,7 @@ class ConsumerMapperTest :
                 ConsumerMapper.map(
                     listOf(matched, unmatched),
                     registryOf(consumer("c", selectors = listOf("GET /users/{id}"))),
-                    "thorn-api",
+                    "example-api",
                 )
             report.changes.toSet() shouldBe setOf(matched, unmatched)
             report.impacts
@@ -257,13 +257,13 @@ class ConsumerMapperTest :
 
         test("zero registered consumers produce an empty impact list") {
             val c = change(ChangeKind.PROPERTY_REMOVED, "GET /users/{id} → response 200 → schema → properties.email", from = "string")
-            val report = ConsumerMapper.map(listOf(c), ConsumerRegistry(version = 1, consumers = emptyList()), "thorn-api")
+            val report = ConsumerMapper.map(listOf(c), ConsumerRegistry(version = 1, consumers = emptyList()), "example-api")
             report.impacts shouldBe emptyList()
             report.changes shouldBe listOf(c)
         }
 
         test("an empty change set produces no impacts") {
-            val report = ConsumerMapper.map(emptyList(), registryOf(consumer("wildcard")), "thorn-api")
+            val report = ConsumerMapper.map(emptyList(), registryOf(consumer("wildcard")), "example-api")
             report.impacts shouldBe emptyList()
             report.changes shouldBe emptyList()
         }
@@ -271,8 +271,8 @@ class ConsumerMapperTest :
         test("the report carries the diffed contract name and the changeOrder-sorted change set") {
             val z = change(ChangeKind.PROPERTY_REMOVED, "GET /z → response 200 → schema → properties.a", from = "string")
             val a = change(ChangeKind.PROPERTY_REMOVED, "GET /a → response 200 → schema → properties.a", from = "string")
-            val report = ConsumerMapper.map(listOf(z, a), registryOf(), "thorn-api")
-            report.contract shouldBe "thorn-api"
+            val report = ConsumerMapper.map(listOf(z, a), registryOf(), "example-api")
+            report.contract shouldBe "example-api"
             report.changes shouldBe listOf(a, z).sortedWith(changeOrder)
         }
     })

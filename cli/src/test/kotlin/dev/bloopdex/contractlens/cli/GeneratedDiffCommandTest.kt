@@ -1,4 +1,4 @@
-// `contractlens generated-diff` CLI tests (Phase 4): the snapshot ->
+// `contractlens generated-diff` CLI tests: the snapshot ->
 // projection -> diff workflow for TS and Kotlin styles, JSON output,
 // classification integration, and the exit-code flag.
 

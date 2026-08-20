@@ -1,4 +1,4 @@
-// Pins the Phase 6 benchmark regression policy (BenchmarkCheck.kt):
+// Pins the benchmark regression policy (BenchmarkCheck.kt):
 // noise-sized changes never fail, catastrophic regressions do, and
 // cross-environment comparisons are informational by construction.
 
