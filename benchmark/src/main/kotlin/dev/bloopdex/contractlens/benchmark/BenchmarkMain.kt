@@ -186,21 +186,45 @@ private fun timedMedian(runs: List<Double>): Double = runs.sorted()[runs.size / 
 private fun benchmark(
     name: String,
     inputSize: String,
+    warmupRuns: Int,
+    timedRuns: Int,
     block: () -> Unit,
 ): BenchmarkResult {
-    repeat(WARMUP_RUNS) { block() }
-    val timed = (0 until TIMED_RUNS).map { measureNanoTime { block() } / 1_000_000.0 }
+    repeat(warmupRuns) { block() }
+    val timed = (0 until timedRuns).map { measureNanoTime { block() } / 1_000_000.0 }
     return BenchmarkResult(
         scenario = name,
         inputSize = inputSize,
-        warmupRuns = WARMUP_RUNS,
-        timedRuns = TIMED_RUNS,
+        warmupRuns = warmupRuns,
+        timedRuns = timedRuns,
         medianMs = timedMedian(timed),
         minMs = timed.min(),
     )
 }
 
-fun main() {
+// Phase 6 modes:
+//   (default) `:benchmark:bench`       — full suite, rewrites the
+//             committed baseline (a conscious maintainer action).
+//   smoke     `:benchmark:benchSmoke`  — reduced timing runs, writes
+//             nothing: the PR gate that proves the harness runs.
+//   check     `:benchmark:benchCheck`  — full suite + comparison
+//             against the committed baseline (never rewrites it);
+//             exit 1 on a FAIL-level regression (policy in
+//             BenchmarkCheck.kt).
+fun main(args: Array<String>) {
+    when (args.firstOrNull()) {
+        "smoke" -> runScenarios(warmupRuns = 1, timedRuns = 3, writeBaseline = false, writeResults = false)
+        "check" -> runCheck()
+        else -> runScenarios(warmupRuns = WARMUP_RUNS, timedRuns = TIMED_RUNS, writeBaseline = true, writeResults = false)
+    }
+}
+
+private fun runScenarios(
+    warmupRuns: Int,
+    timedRuns: Int,
+    writeBaseline: Boolean,
+    writeResults: Boolean,
+): BenchmarkBaseline {
     // The JavaExec working directory is the :benchmark project dir.
     val repoRoot = File("").absoluteFile.parentFile
     val parser = OpenApiParser()
@@ -226,35 +250,35 @@ fun main() {
 
     val results =
         listOf(
-            benchmark("openapi-parse-5k", "5k lines / $lines lines / 120 ops / 240 operations total") {
+            benchmark("openapi-parse-5k", "5k lines / $lines lines / 120 ops / 240 operations total", warmupRuns, timedRuns) {
                 parser.parse(specFile, "benchmark-api")
             },
-            benchmark("openapi-diff-5k", "two 5k-line specs (~30 structural changes)") {
+            benchmark("openapi-diff-5k", "two 5k-line specs (~30 structural changes)", warmupRuns, timedRuns) {
                 DiffEngine.diff(surfaceA, surfaceB)
             },
-            benchmark("classify-diff", "change set of the 5k pair (${changes.size} changes)") {
+            benchmark("classify-diff", "change set of the 5k pair (${changes.size} changes)", warmupRuns, timedRuns) {
                 Classifier.classify(changes, surfaceA, surfaceB)
             },
-            benchmark("impact-1k-consumers", "1,000-consumer registry over the 5k change set") {
+            benchmark("impact-1k-consumers", "1,000-consumer registry over the 5k change set", warmupRuns, timedRuns) {
                 ConsumerMapper.map(changes, registry1k, "benchmark-api")
             },
-            benchmark("generated-projection-diff", "project + diff both 5k surfaces (ts)") {
+            benchmark("generated-projection-diff", "project + diff both 5k surfaces (ts)", warmupRuns, timedRuns) {
                 DiffEngine.diff(
                     GeneratedClientProjection.project(surfaceA, GeneratorStyle.TYPESCRIPT),
                     GeneratedClientProjection.project(surfaceB, GeneratorStyle.TYPESCRIPT),
                 )
             },
-            benchmark("graphql-parse", "SDL with 200 query fields and 200 types") {
+            benchmark("graphql-parse", "SDL with 200 query fields and 200 types", warmupRuns, timedRuns) {
                 graphQl.parse(sdl, "benchmark-graphql")
             },
-            benchmark("json-schema-parse", "event schema with 1,000 properties") {
+            benchmark("json-schema-parse", "event schema with 1,000 properties", warmupRuns, timedRuns) {
                 jsonSchema.parse(event, "benchmark-event")
             },
-            benchmark("registry-parse-1k", "registry YAML with 1,000 consumers (parse + validate)") {
+            benchmark("registry-parse-1k", "registry YAML with 1,000 consumers (parse + validate)", warmupRuns, timedRuns) {
                 dev.bloopdex.contractlens.registry.RegistryParser
                     .parse(registryYaml1k, "benchmark-registry.yaml")
             },
-            benchmark("snapshot-build-verify", "build + verify a snapshot of the 5k surface") {
+            benchmark("snapshot-build-verify", "build + verify a snapshot of the 5k surface", warmupRuns, timedRuns) {
                 val document =
                     dev.bloopdex.contractlens.snapshot.buildSnapshot(
                         contract = "benchmark-api",
@@ -279,7 +303,7 @@ fun main() {
         )
     val baseline = BenchmarkBaseline(environment = environment, results = results)
 
-    println("=== ContractLens Phase 5 performance baseline ===")
+    println("=== ContractLens performance scenarios (warmup=$warmupRuns timed=$timedRuns) ===")
     println(
         "environment: ${environment.os} | java ${environment.javaVersion} | ${environment.availableProcessors} cpus | ${environment.maxMemoryMb} MB max heap",
     )
@@ -287,10 +311,72 @@ fun main() {
         println("%-28s %-45s median %8.2f ms  (min %8.2f ms)".format(result.scenario, result.inputSize, result.medianMs, result.minMs))
     }
 
-    val baselineFile = File(repoRoot, "docs/benchmarks/baseline.json")
-    baselineFile.parentFile.mkdirs()
-    baselineFile.writeText(CanonicalJson.encodeToString(BenchmarkBaseline.serializer(), baseline))
-    println("baseline written to ${baselineFile.absolutePath}")
+    if (writeBaseline) {
+        val baselineFile = File(repoRoot, "docs/benchmarks/baseline.json")
+        baselineFile.parentFile.mkdirs()
+        baselineFile.writeText(CanonicalJson.encodeToString(BenchmarkBaseline.serializer(), baseline))
+        println("baseline written to ${baselineFile.absolutePath}")
+    }
+    if (writeResults) {
+        val resultsFile = File("build/benchmark-results.json")
+        resultsFile.parentFile.mkdirs()
+        resultsFile.writeText(CanonicalJson.encodeToString(BenchmarkBaseline.serializer(), baseline))
+        println("results written to ${resultsFile.absolutePath}")
+    }
+    return baseline
+}
+
+private fun runCheck() {
+    val current = runScenarios(warmupRuns = WARMUP_RUNS, timedRuns = TIMED_RUNS, writeBaseline = false, writeResults = true)
+    val repoRoot = File("").absoluteFile.parentFile
+    val committedFile = File(repoRoot, "docs/benchmarks/baseline.json")
+    if (!committedFile.isFile) {
+        println("NO COMMITTED BASELINE at ${committedFile.absolutePath} — nothing to compare (run :benchmark:bench first)")
+        kotlin.system.exitProcess(1)
+    }
+    val committed =
+        CanonicalJson.decodeFromString(
+            BenchmarkBaseline.serializer(),
+            committedFile.readText(),
+        )
+    val rows = compareAgainstBaseline(current, committed)
+    val sameEnvironment = osFamily(current.environment) == osFamily(committed.environment)
+
+    println("=== benchmark comparison against committed baseline ===")
+    println(
+        "policy: FAIL if (ratio > ${FAIL_RATIO}x AND median > ${FAIL_ABSOLUTE_MS} ms) OR median > ${FAIL_SANITY_MS} ms; " +
+            "WARN if ratio > ${WARN_RATIO}x; cross-environment runs are informational only.",
+    )
+    println(
+        "current environment: ${current.environment.os} — " +
+            if (sameEnvironment) {
+                "same OS family as the committed baseline (gate applies)"
+            } else {
+                "DIFFERENT OS family from the committed baseline (${committed.environment.os}) — informational only, the gate does not apply"
+            },
+    )
+    rows.forEach { row ->
+        val baseline = row.baselineMedianMs?.let { "%.2f".format(it) } ?: "n/a"
+        val ratio = row.ratio?.let { "%.2fx".format(it) } ?: "n/a"
+        println(
+            "%-28s baseline %8s ms | current %8.2f ms | ratio %6s | %s".format(
+                row.scenario,
+                baseline,
+                row.currentMedianMs,
+                ratio,
+                row.verdict,
+            ),
+        )
+    }
+    val warnings = rows.filter { it.verdict == ComparisonVerdict.WARN }
+    if (warnings.isNotEmpty()) {
+        println("WARN rows (investigate; not failing): ${warnings.joinToString { it.scenario }}")
+    }
+    if (rows.hasFailures()) {
+        println("BENCHMARK REGRESSION: ${rows.filter { it.verdict == ComparisonVerdict.FAIL }.joinToString { it.scenario }}")
+        kotlin.system.exitProcess(1)
+    }
+    println("benchmark comparison: no FAIL-level regressions")
 }
 
 private val registryYaml1k: String =
