@@ -127,6 +127,12 @@ sealed class ContractError(
             "impact mapping requires both snapshots to be the same contract (old: '$oldContract', new: '$newContract')",
         )
 
+    /** The signal output file cannot be written (Phase 6, ADR-008). */
+    class OutputUnwritable(
+        path: String,
+        detail: String,
+    ) : ContractError("OUTPUT_UNWRITABLE", "cannot write signal output '$path': $detail")
+
     /** The usage graph file is malformed YAML or violates the usage schema (Phase 4). */
     class UsageInvalid(
         detail: String,

@@ -59,13 +59,29 @@ abstract class BaseCommand(
 }
 
 class ContractLensCommand : NoOpCliktCommand(name = "contractlens") {
-    override fun help(context: Context): String = "Local-first API contract impact analysis"
+    override fun help(context: Context): String =
+        "Local-first API contract impact analysis. Commands: snapshot, verify, list, diff, impact, generated-diff, signal. Version: --version"
 }
 
+/**
+ * The version line for a bare `--version` request, else null.
+ * --version (Phase 6, ADR-007) is reported from the generated constant
+ * whose single authoritative source is `version` in the root
+ * build.gradle.kts; handled before Clikt so its behavior is explicit
+ * (stdout, exit 0, nothing else).
+ */
+internal fun versionLine(args: Array<String>): String? =
+    if (args.size == 1 && args[0] == "--version") "contractlens version $CONTRACTLENS_VERSION" else null
+
 fun main(args: Array<String>) {
+    versionLine(args)?.let {
+        println(it)
+        return
+    }
     val diffCommand = DiffCommand()
     val impactCommand = ImpactCommand()
     val generatedDiffCommand = GeneratedDiffCommand()
+    val signalCommand = SignalCommand()
     val command =
         ContractLensCommand().subcommands(
             SnapshotCommand(),
@@ -74,6 +90,7 @@ fun main(args: Array<String>) {
             diffCommand,
             impactCommand,
             generatedDiffCommand,
+            signalCommand,
         )
     try {
         command.parse(args)
@@ -81,7 +98,10 @@ fun main(args: Array<String>) {
         // --help: the help text has been printed; nothing to add.
     } catch (e: CliktError) {
         // Usage errors are operational: the contract reserves exit 1 for
-        // breaking changes (Phase 4 classifier). Clikt has already printed the message.
+        // breaking changes (Phase 4 classifier). Clikt normally prints
+        // the usage message itself; when it does not (non-interactive
+        // terminals), the error must never be silent.
+        System.err.println("error [USAGE]: ${e.message ?: e.javaClass.simpleName}")
         exitProcess(EXIT_ERROR)
     } catch (e: ContractError) {
         System.err.println("error [${e.code}]: ${e.message}")
@@ -90,7 +110,7 @@ fun main(args: Array<String>) {
         System.err.println("error [INTERNAL]: ${e.message ?: e.javaClass.simpleName}")
         exitProcess(EXIT_ERROR)
     }
-    if (diffCommand.breakingFound || impactCommand.breakingFound || generatedDiffCommand.breakingFound) {
+    if (diffCommand.breakingFound || impactCommand.breakingFound || generatedDiffCommand.breakingFound || signalCommand.breakingFound) {
         exitProcess(EXIT_BREAKING)
     }
     exitProcess(EXIT_OK)
