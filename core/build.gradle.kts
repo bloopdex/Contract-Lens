@@ -12,7 +12,7 @@ dependencies {
     testImplementation("io.kotest:kotest-property:5.9.1")
 }
 
-// Phase 5 fuzz suite: the classifier/diff invariants at scale.
+// Fuzz suite: the classifier/diff invariants at scale.
 tasks.register<Test>("fuzz") {
     description = "Runs the classifier fuzz suite with the configured iteration count"
     group = "verification"

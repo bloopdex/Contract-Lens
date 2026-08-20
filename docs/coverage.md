@@ -1,4 +1,4 @@
-# ContractLens coverage policy (Phase 5 gate + Phase 6 measurement update)
+# ContractLens coverage policy
 
 ## Tooling
 
@@ -7,7 +7,7 @@ Kover 0.9.9 (`org.jetbrains.kotlinx.kover`), applied to every module.
 the enforcement — it runs in CI). Reports: each module writes
 `<module>/build/reports/kover/report.xml`.
 
-Phase 6 measurement note (2026-08-20): the ROOT aggregate report
+Measurement note (2026-08-20): the ROOT aggregate report
 (`build/reports/kover/report.xml`) is now empty — Kover 0.9.9's root
 merge yields no data when a subproject without main sources exists
 (the new test-only `:fuzz` module). The gate is unaffected (per-module
@@ -30,7 +30,7 @@ reports.
 | benchmark | 16.1% (tool module, no gate — most code executes only under `:benchmark:bench`) |
 | **aggregate (gate scope, benchmark excluded)** | **88.7%** (2,323 / 2,618) |
 
-(The Phase 5 table listed aggregate 88.5% (10,890 / 12,310) computed
+(An earlier table listed aggregate 88.5% (10,890 / 12,310) computed
 from the root report — those counters exceed the actual source sizes
 (e.g. core has ~2,500 source lines), an artifact of the then-working
 root merge. The percentages were always the meaningful number and they
@@ -46,8 +46,7 @@ baseline (root `build.gradle.kts`, `coverageBounds`):
 - the benchmark module carries no gate (tool module); the `:fuzz`
   module has no main sources
 
-`gradlew koverVerify` runs the gate; it is intended for CI (Phase 6
-wired it in) and is reproducible locally.
+`gradlew koverVerify` runs the gate; it runs in CI and is reproducible locally.
 
 ## Rationale
 

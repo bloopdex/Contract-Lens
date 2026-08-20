@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     application
-    // Phase 6 (ADR-007): fat JAR as the primary release artifact.
+    // (ADR-007): fat JAR as the primary release artifact.
     id("com.gradleup.shadow")
 }
 
@@ -13,7 +13,7 @@ application {
 
 // Reproducibility (ADR-007): normalized entry timestamps and order so a
 // rebuild from a clean checkout produces identical bytes — verified by
-// the Phase 6 double-build check, any remaining nondeterminism is
+// the double-build check, any remaining nondeterminism is
 // documented in docs/release.md.
 tasks.shadowJar {
     archiveBaseName.set("contractlens")
@@ -81,7 +81,7 @@ dependencies {
     testImplementation("com.github.ajalt.clikt:clikt:5.0.3")
 }
 
-// Phase 5 fuzz suites: the same fuzz tests as the normal run, with a
+// Fuzz suites: the same fuzz tests as the normal run, with a
 // higher iteration count. `gradlew :cli:fuzz -PfuzzIterations=200000`
 // runs a recorded large sweep; findings become regression tests.
 tasks.register<Test>("fuzz") {

@@ -1,9 +1,9 @@
-# CI architecture (Phase 6)
+# CI architecture
 
 Three workflows: **CI** (PRs + pushes to main), **Nightly** (scheduled),
 **Release** (tag-driven). Every command in every workflow has been
 executed locally; GitHub execution itself is pending the repo hosting
-decision (BloopLab SOURCE-OF-TRUTH open decision #3) — the workflows
+decision (the repository hosting is undecided) — the workflows
 run as written once the repository is pushed to a host.
 
 ## Workflows and triggers
@@ -31,7 +31,7 @@ Gradle build caching is enabled via setup-gradle).
 
 | Job | What | Failure behavior |
 |---|---|---|
-| fuzz-long | 200k iterations per harness (the recorded Phase 5 sweep scale, ~39 min) | fails on any crash/nondeterminism; the harness saves failing inputs |
+| fuzz-long | 200k iterations per harness (the recorded sweep scale, ~39 min) | fails on any crash/nondeterminism; the harness saves failing inputs |
 | jazzer-fuzz | `:fuzz:jazzerFuzz -Pjazzer.fuzz=1` — 6 coverage-guided targets, 2 min each | fails on a found crash; reproducer directory uploaded as an artifact (fix flow: reproduce → root cause → fix → commit reproducer as a regression seed) |
 | benchmark (windows) | full suite + comparison vs committed baseline | FAIL only for catastrophic regressions (policy below); 2x-3x = WARN, printed + artifact |
 | benchmark-ubuntu | same suite on Linux | informational by construction — cross-OS numbers are never compared as equivalent |
@@ -108,7 +108,7 @@ powershell -File scripts\release.ps1 -Version 0.1.0   # release bundle (local)
 
 - Workflows execute only once the repository is hosted (no remote yet);
   every command is verified locally with the results recorded in the
-  Phase 6 report.
+  the delivery record.
 - Dependabot + the GitHub dependency graph activate with hosting; the
   OSV scan covers the gap locally.
 - The benchmark FAIL gate is intentionally conservative at ms scale —

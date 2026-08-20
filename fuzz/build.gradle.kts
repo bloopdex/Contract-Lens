@@ -1,4 +1,4 @@
-// Phase 6 (workstream B): coverage-guided fuzz targets via Jazzer
+// Coverage-guided fuzz targets via Jazzer
 // (jazzer-junit 0.23.0, @FuzzTest). This module is test-only: it
 // depends on the production modules and exposes NO main sources.
 //
@@ -17,7 +17,7 @@
 // second task — a build must never unexpectedly spend 12 minutes
 // fuzzing.
 //
-// The Phase 5 seeded harness (ParserFuzzTest / ClassifierFuzzTest)
+// The seeded harness (ParserFuzzTest / ClassifierFuzzTest)
 // remains untouched: it pins controlled-outcome + determinism
 // invariants; Jazzer complements it with coverage-guided exploration.
 

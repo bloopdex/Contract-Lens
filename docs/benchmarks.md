@@ -1,4 +1,4 @@
-# ContractLens performance baselines (Phase 5)
+# ContractLens performance baselines
 
 ## Methodology
 
@@ -31,10 +31,11 @@ degenerate-fixture bug found while building the baseline, not an engine
 defect.
 
 The results are written to `docs/benchmarks/baseline.json` on every
-run; the human-readable table goes to stdout. Phase 6 wired the same
-scenarios into nightly CI as regression benchmarks (`:benchmark:benchCheck`).
+run; the human-readable table goes to stdout. The same
+scenarios run in nightly CI as regression benchmarks
+(`:benchmark:benchCheck`).
 
-## Phase 6 automation (2026-08-19)
+## Automation (2026-08-19)
 
 - `:benchmark:bench` — full suite; REWRITES the committed baseline (a
   conscious maintainer action, never automatic).
@@ -81,7 +82,7 @@ absolute claims.
 | registry-parse-1k | 29.32 ms | 27.64 ms |
 | snapshot-build-verify | 14.93 ms | 9.76 ms |
 
-Against the Phase 5 page's provisional targets (recorded, not claimed
+Against the provisional targets recorded when the baseline was taken (not claimed
 as guarantees): parse + diff of a 5k-line spec ≈ **55 ms combined
 (well under the 1 s target)**; registry resolution for 1k consumers
 ≈ **41 ms (under the 100 ms target)**. No optimizations were applied —

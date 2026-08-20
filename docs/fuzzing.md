@@ -1,8 +1,8 @@
-# Fuzzing ContractLens (Phase 5 harness + Phase 6 Jazzer)
+# Fuzzing ContractLens (seeded harness + Jazzer)
 
 Two complementary layers. Neither replaces the other.
 
-## 1. The seeded harness (Phase 5, unchanged)
+## 1. The seeded harness
 
 `ParserFuzzTest` (`:cli:fuzz`) and `ClassifierFuzzTest` (`:core:fuzz`)
 fuzz with a FIXED seed over a corpus of committed fixtures plus inline
@@ -14,12 +14,12 @@ duplications / span swaps, and assert per input:
 - determinism — the same input twice produces the same outcome;
 - failing inputs are saved as `fuzz-failure-<label>-#<index>.bin`.
 
-Recorded sweeps (Phase 5): 200k parser iterations × 5 boundaries =
+Recorded sweeps: 200k parser iterations × 5 boundaries =
 1,000,000 parser executions (39 min), and 200k classifier invariant
 iterations (55 s) — both clean. Iteration counts come from the
 `fuzz.iterations` system property (`-PfuzzIterations=…`).
 
-## 2. Jazzer coverage-guided targets (Phase 6)
+## 2. Jazzer coverage-guided targets
 
 `:fuzz` is a test-only module with `@FuzzTest` targets
 (`com.code-intelligence:jazzer-junit` 0.23.0):

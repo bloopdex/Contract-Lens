@@ -77,6 +77,6 @@ Two clean-checkout builds of the fat JAR are byte-compared during the
 release verification (timestamps and entry order are normalized:
 `isPreserveFileTimestamps = false`, `isReproducibleFileOrder = true`).
 The result of that investigation — what is byte-identical and what (if
-anything) remains environment-dependent — is recorded in the Phase 6
+anything) remains environment-dependent — is recorded in the delivery
 report and updated here on every release. Nothing is labeled
 "reproducible" without the double-build evidence.

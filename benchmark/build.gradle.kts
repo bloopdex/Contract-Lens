@@ -18,7 +18,7 @@ dependencies {
     testImplementation(kotlin("test-junit5"))
 }
 
-// Phase 5 performance baselines: `gradlew :benchmark:bench` runs the
+// Performance baselines: `gradlew :benchmark:bench` runs the
 // measured scenarios and REWRITES docs/benchmarks/baseline.json (a
 // conscious maintainer action — never automatic).
 tasks.register<JavaExec>("bench") {
@@ -28,7 +28,7 @@ tasks.register<JavaExec>("bench") {
     mainClass.set("dev.bloopdex.contractlens.benchmark.BenchmarkMainKt")
 }
 
-// Phase 6: PR smoke — reduced timing runs, writes nothing; proves the
+// PR smoke — reduced timing runs, writes nothing; proves the
 // harness and fixtures still run without committing numbers.
 tasks.register<JavaExec>("benchSmoke") {
     description = "Benchmark smoke: reduced timing runs, writes nothing (the PR gate)"
@@ -38,7 +38,7 @@ tasks.register<JavaExec>("benchSmoke") {
     args("smoke")
 }
 
-// Phase 6: nightly comparison against the committed baseline; exit 1 on
+// Nightly comparison against the committed baseline; exit 1 on
 // a FAIL-level regression (policy in BenchmarkCheck.kt). Never rewrites
 // the baseline.
 tasks.register<JavaExec>("benchCheck") {

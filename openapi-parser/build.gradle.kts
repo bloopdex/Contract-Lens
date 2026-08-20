@@ -5,8 +5,8 @@ plugins {
 dependencies {
     api(project(":core"))
 
-    // 2.1.44 (Phase 6 OSV scan): 2.1.40 fixed GHSA-2237-hv52-mmg9
-    // (thread-safety race, Phase 5 review) but its transitive graph
+    // 2.1.44 (OSV scan): 2.1.40 fixed GHSA-2237-hv52-mmg9
+    // (thread-safety race, security review) but its transitive graph
     // still resolved jackson 2.21.1 (multiple GHSAs, incl. HIGH
     // GHSA-r7wm-3cxj-wff9) and logback 1.3.15 (GHSA-25qh-j22f-pwp8).
     // 2.1.44 is the latest release (2026-06-12) with a newer
