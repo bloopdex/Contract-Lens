@@ -1,4 +1,4 @@
-// Benchmark regression policy (docs/benchmarks.md):
+// Benchmark regression policy (docs/performance.md):
 //
 // Comparisons are computed against the committed baseline
 // (docs/benchmarks/baseline.json). Threshold rationale:

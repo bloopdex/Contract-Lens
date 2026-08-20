@@ -72,7 +72,7 @@ jobs:
             fuzz/.cifuzz-corpus/**
 
   benchmark:
-    # The committed baseline was measured on Windows (docs/benchmarks.md);
+    # The committed baseline was measured on Windows (docs/performance.md);
     # the FAIL gate applies on this job, the ubuntu job is informational.
     runs-on: windows-latest
     steps:

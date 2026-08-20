@@ -1,4 +1,4 @@
-// Performance baselines (methodology: docs/benchmarks.md).
+// Performance baselines (methodology: docs/performance.md).
 //
 // Each scenario: warmup runs, then timed runs; the recorded value is
 // the MEDIAN (min also reported). Deterministic synthetic fixtures so
@@ -68,7 +68,7 @@ private fun generateOpenApiSpec(
         // NOTE: every path must have a DISTINCT canonical identity
         // (/group<N>/{}); sibling templates that share an identity are
         // the same operation by ADR-001, which would collapse the
-        // corpus into one op (recorded in docs/benchmarks.md).
+        // corpus into one op (recorded in docs/performance.md).
         sb.append("  /group$index/{res$id}:\n")
         sb.append("    get:\n")
         sb.append("      parameters:\n")
@@ -253,7 +253,7 @@ private fun runScenarios(
             benchmark("openapi-parse-5k", "5k lines / $lines lines / 120 ops / 240 operations total", warmupRuns, timedRuns) {
                 parser.parse(specFile, "benchmark-api")
             },
-            benchmark("openapi-diff-5k", "two 5k-line specs (~30 structural changes)", warmupRuns, timedRuns) {
+            benchmark("openapi-diff-5k", "two 5k-line specs (${changes.size} structural changes)", warmupRuns, timedRuns) {
                 DiffEngine.diff(surfaceA, surfaceB)
             },
             benchmark("classify-diff", "change set of the 5k pair (${changes.size} changes)", warmupRuns, timedRuns) {
