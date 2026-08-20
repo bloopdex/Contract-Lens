@@ -8,3 +8,10 @@ out/
 
 # Kotlin 2.x project-local build cache
 .kotlin/
+
+# Phase 6: generated release artifacts are never committed (ADR-007)
+dist/
+
+# Jazzer corpus directories (crash inputs worth keeping are committed
+# to fuzz/src/test/resources/...Inputs/<method>/ deliberately)
+.cifuzz-corpus/

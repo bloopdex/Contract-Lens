@@ -1,0 +1,19 @@
+# OSV-Scanner policy for ContractLens (SECURITY.md).
+#
+# Ignored vulnerabilities are explicit, time-bounded, and reviewable —
+# never silent suppressions. Every entry needs a reason and an expiry;
+# when the expiry passes, the scanner starts failing again until the
+# entry is renewed with fresh justification or the finding is fixed.
+
+[[IgnoredVulns]]
+id = "GHSA-r937-wjx7-w2jp"
+reason = """
+kotlin-gradle-plugin 2.2.0 (the Kotlin toolchain itself, resolved via
+the Gradle plugin classpath). The only published fix is 2.4.20-Beta1 —
+adopting a beta toolchain as a security reaction is not justified.
+Reachability: build-time compiler plugin only; never part of the
+shipped artifact; no untrusted input reaches it. Revisit: when a stable
+Kotlin release containing the fix lands, bump the toolchain
+deliberately (tracked in docs/security.md).
+"""
+ignoreUntil = "2027-02-19T00:00:00Z"

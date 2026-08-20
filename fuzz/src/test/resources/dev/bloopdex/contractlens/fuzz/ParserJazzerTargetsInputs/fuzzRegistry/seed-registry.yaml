@@ -1,0 +1,6 @@
+version: 1
+consumers:
+  - id: c
+    kind: service
+    contract: thorn-api
+    operations: ["*"]

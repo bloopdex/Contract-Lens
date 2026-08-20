@@ -1,0 +1,7 @@
+version: 1
+consumers:
+  - id: c
+    contract: thorn-api
+    operations:
+      - operation: "*"
+        responseFields: [email]

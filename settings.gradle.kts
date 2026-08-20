@@ -22,3 +22,6 @@ rootProject.name = "contractlens"
 
 include(":core", ":openapi-parser", ":snapshot-store", ":registry", ":generated-client", ":graphql", ":json-schema", ":cli")
 include(":benchmark")
+// Phase 6 (workstream B): coverage-guided fuzz targets (Jazzer). Test-only
+// module — no main sources, no coverage gate.
+include(":fuzz")
