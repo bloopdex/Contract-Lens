@@ -18,9 +18,9 @@ providers with degraded mode). Its integration design assigns the
 ContractLens consumer to DeployScore's own future work: "breaking-change
 report → API contract change signal".
 
-A sibling project's decision (Recall ADR-0029) reached the same situation
-and decided the portable export is the defined future boundary — no feed
-integration against a nonexistent receiver.
+A previously shipped local-first tool faced the same situation and
+reached the same conclusion — the portable export is the defined future
+boundary, no feed integration against a nonexistent receiver.
 
 ## Decision
 
@@ -70,3 +70,13 @@ integration against a nonexistent receiver.
   an optional transport adapter (env-var-configured endpoint + API key)
   that submits the same payload, failure-safe, without changing local
   behavior.
+
+## Verification
+
+- Signal builder unit tests (`:core`) and signal CLI tests (`:cli`):
+  payload shape, determinism, exit codes (0/1/2 including
+  `OUTPUT_UNWRITABLE`).
+- The privacy boundary is pinned by tests in both `:core` and `:cli`:
+  no property names, values, descriptions, or prose in the payload.
+- Emission is offline by construction — there is no network code path
+  to test.

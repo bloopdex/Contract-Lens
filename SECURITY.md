@@ -40,7 +40,9 @@ silent suppressions. A scanner finding is never hidden to make CI green.
 
 ```
 # from the repository root (lockfiles are committed, so scans are reproducible)
-docker run --rm -v "${PWD}:/src" -w /src ghcr.io/google/osv-scanner scan -r .
+# --config applies the documented waivers in osv-scanner.toml — omit it
+# and the scan reports filtered findings as failures
+docker run --rm -v "${PWD}:/src" -w /src ghcr.io/google/osv-scanner scan --config=osv-scanner.toml -r .
 ```
 
 The same tool + the same lockfiles in CI = the same policy.

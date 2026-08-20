@@ -1,177 +1,232 @@
-# ContractLens architecture
+# Architecture
 
-ContractLens turns contract documents into **canonical snapshots**,
-diffs those snapshots **structurally**, classifies each change by its
-**compatibility implications**, and maps the result onto **declared
-consumers**. This page explains the architecture behind that pipeline —
-what is shared across formats, what is adapter-specific, and why the
-separation exists.
+This page explains the architecture to someone who has never seen the
+source code: the problem it exists for, the goal it must guarantee, and
+why each layer has the shape it has. The canonical model's details live
+in [contract-model.md](contract-model.md); the rules in
+[classification.md](classification.md).
 
-## The pipeline
+## Problem
+
+A contract change breaks consumers at runtime, not build time. Each
+consumer compiles against its own copy of the contract (a DTO, a
+generated client, a hand-written API layer), so a field removed in the
+provider breaks a client's request with nothing in the raw git diff to
+warn anyone. Pure schema diffing is a solved problem elsewhere; what
+was missing is a tool that also says *which declared consumers the
+change hits* and *why it matters*, before merge.
+
+## Architectural goal
+
+ContractLens must guarantee: **given two captures of one contract and
+the declared consumers, it produces a deterministic, explainable answer
+to "what changed, does it break consumers, and who declares consumption
+of the changed surface"** — with every verdict carrying its reason and
+its exact schema path, and every boundary failing loudly instead of
+guessing.
+
+Three properties follow from the goal:
+
+- **Determinism** — identical inputs produce identical outputs, so the
+  answer is reproducible in CI and reviewable by humans.
+- **Explainability** — no scores, no ML: every change carries its kind,
+  its location, and its reason.
+- **Honesty** — where the contract evidence is insufficient, the
+  answer is `review`, not a guess; where knowledge is declared (the
+  registry), its boundary is stated in every report.
+
+## Canonical model — one model for every format
+
+The central decision (ADR-001, ADR-004): every input format maps into
+**one** format-neutral contract surface, so the diff engine, the
+classifier, and the mapper are written exactly once. Without it,
+OpenAPI's vendor shapes, GraphQL's type system, and JSON Schema's
+keyword vocabulary would each need their own diff and their own rules —
+three rule sets that would inevitably disagree.
+
+The model carries structural concepts only: operations (with canonical
+path-template identity), parameters, request bodies, responses, and
+recursive schema nodes (types, properties, required, enums,
+constraints, nullability, refs). Descriptions, examples, and other
+prose are deliberately **not captured** — they carry no compatibility
+information, they are where secrets live, and their absence is the
+redaction boundary. Full detail: [contract-model.md](contract-model.md).
+
+## Pipeline
 
 ```
-contract document (OpenAPI / GraphQL SDL / JSON Schema)
-        ↓  per-format parser adapter
-canonical contract surface (format-neutral model)
-        ↓  snapshot store
-snapshot document (content-hash verified, keyed by contract + commit)
-        ↓  structural diff engine
-change set (26 structural kinds, precise locations, no verdicts)
-        ↓  classifier
-classified changes (breaking / non-breaking / review + semver labels)
-        ↓  consumer mapper (optional, registry-backed)
-per-consumer impact report
-        ↓  reporter / JSON emission
-human report · versioned JSON · DeployScore signal
+source (OpenAPI / GraphQL SDL / JSON Schema)
+  → per-format parser adapter → canonical surface
+  → snapshot (content-hash verified, keyed by contract + commit SHA)
+  → structural diff (26 change kinds, precise locations, no verdicts)
+  → classification (direction-aware rules, derived semver)
+  → consumer impact mapping (declared registry, honesty boundary)
+  → human report · versioned JSON · DeployScore signal
 ```
 
-Every stage is a pure function of its inputs except the parsers and the
-file-backed store. Stages never know about the stages after them: the
-diff engine does not know consumers exist, and the classifier does not
-know which consumers read what.
+Two stage-boundary rules keep the pipeline composable:
 
-## The canonical contract surface
+1. **Every stage is a pure function of its inputs** except the parsers
+   and the file-backed store.
+2. **No stage knows about later stages.** The diff engine does not know
+   consumers exist; the classifier does not know which consumers read
+   what; the mapper does not decide breakage. Each layer can be tested
+   and reasoned about alone.
 
-The central design decision (ADR-001, ADR-004): every format maps into
-**one** format-neutral model (`:core`), so the diff engine, classifier,
-and mapper are written exactly once.
+## Adapters — what belongs to each format
 
-A `ContractSurface` contains:
+An adapter's job is exactly one translation: a format's syntax into
+the canonical model, plus the format's own validation. Everything else
+is shared.
 
-| Concept | Representation |
-|---|---|
-| Operations | method (lowercase) + path template, plus parameters, request body, responses |
-| Path identity | the path template with every `{param}` normalized to `{}` — `/users/{id}` and `/users/{userId}` are the **same operation** |
-| Parameters | name, location (path/query/header/cookie), required, schema |
-| Request body | content types → schema, required flag |
-| Responses | normalized status → content types → schema |
-| Schemas | recursive `SchemaNode`: types, format, properties (sorted), required list, items, enum values, nullability, constraints, default-presence, ref target |
-| Locations | every node carries a logical location (`GET /users → response 200 → schema → properties.email`) and a source pointer for explainability |
+| Adapter | Module | Scope |
+|---|---|---|
+| OpenAPI 3.0/3.1 | `:openapi-parser` | swagger-parser under the hood; the version is validated *before* parsing (Swagger 2.0 would otherwise be silently converted); local `$ref`s resolved with cycle/depth guards; remote refs rejected |
+| GraphQL SDL | `:graphql` | graphql-java schema parser; query/mutation fields → operations, types → schemas ([graphql.md](graphql.md)) |
+| JSON Schema | `:json-schema` | core vocabulary → model; local refs stay REF nodes, cross-document refs rejected ([json-schema.md](json-schema.md)) |
+| Consumer registry | `:registry` | versioned YAML via kaml, strict validation ([impact-analysis.md](impact-analysis.md)) |
+| Usage graph | `:registry` | same boundary; records field reads ([usage-graph.md](usage-graph.md)) |
+| Generated-client projection | `:generated-client` | not a parser — a projection of OpenAPI surfaces into generator-convention shape ([generated-clients.md](generated-clients.md)) |
 
-**Why canonicalization exists:** without it, OpenAPI's vendor shapes,
-GraphQL's type system, and JSON Schema's keyword vocabulary would each
-need their own diff and their own compatibility rules — three rule sets
-that would inevitably disagree. With it, a GraphQL field removal and a
-JSON Schema property removal are the *same change kind* with the *same
-classification*, and the reasoning is expressed in one vocabulary.
+## Core engine — what must stay format-independent
 
-Deliberate omissions: descriptions, examples, and other prose are **not
-captured** — they carry secrets and add nothing to compatibility
-analysis (this is also the redaction boundary, pinned by tests).
+`:core` holds everything that reasons about the model: the diff engine,
+the classifier, the consumer mapper, the registry/usage domain, the
+signal builder, the error model. Two rules keep the core a core:
+
+- **Dependency direction is strictly inward** — every adapter depends
+  on `:core` only; `:cli` depends on all of them; nothing in `:core`
+  depends on an adapter, a filesystem, or a CLI.
+- **The parser is a facade, not the model** — swagger-core types never
+  leak past the OpenAPI adapter (ADR-005).
 
 ## Snapshots
 
-A snapshot (`:snapshot-store`, ADR-003) is a canonical JSON document:
+A snapshot is the canonical serialization of one contract at one commit
+(ADR-003): contract + surface + identity (git-commit SHA) + timestamp +
+content hash over everything except the timestamp. Loading always
+re-verifies the hash, so a corrupted or hand-edited snapshot is refused
+loudly and never diffed. Snapshots are files
+(`<contract>@<sha>.snapshot.json`) in a plain directory; the index is a
+directory scan rebuilt on every start, and contract names are
+sanitized so they can never escape the store.
 
-```
-contract + surface + identity (git-commit SHA) + capturedAt + content hash
-```
+Snapshots exist because a diff needs two trusted captures of one
+contract — and because tamper-evidence is a property, not a convention.
 
-The content hash covers everything except the timestamp; loading
-re-verifies it, so a corrupted or hand-edited snapshot is refused
-loudly and never diffed. Identical content always produces identical
-bytes (test-pinned). Snapshots are stored as files keyed by
-`<contract>@<commit-sha>.snapshot.json`; the store directory is scanned
-to rebuild the index on every start, and contract names are sanitized
-so they can never escape the directory.
+## The diff engine
 
-## The structural diff engine
+`DiffEngine.diff(old, new)` produces a deterministic change set over
+the canonical identities (ADR-001): operations match by
+`(method, path identity)`, parameters by `(in, name)`, responses by
+normalized status, schemas traverse recursively to leaf locations. The
+26 change kinds are **structural facts** — `PROPERTY_REMOVED` says a
+property disappeared, never whether that breaks anyone. Two
+conservative choices are deliberate:
 
-`DiffEngine.diff(oldSurface, newSurface)` produces a deterministic
-change set (ADR-001 identity rules):
-
-- operations match by `(method, path identity)`;
-- parameters by `(name, location)`;
-- responses by normalized status;
-- schemas are traversed recursively, so a change deep inside a nested
-  object surfaces as a leaf-level change with its full location.
-
-The 26 change kinds are **structural facts** — `PROPERTY_REMOVED` says
-a property disappeared, never whether that breaks anyone. Two kinds of
-facts are deliberately conservative:
-
-- **Renames are never inferred.** A removed field plus an added field
-  are two independent facts; the classifier (not the engine) may flag
-  same-type add/remove pairs as rename *candidates* for review.
-- **Verdicts are null in the engine's output.** Compatibility is a
-  separate concern (the classifier); the engine's JSON stays free of
-  judgment.
+- **Renames are never inferred** — a removed field and an added field
+  are two facts; the classifier may pair same-type add/remove pairs as
+  rename *candidates*.
+- **Verdicts are null in the engine's output** — compatibility is a
+  separate concern; the engine's JSON stays free of judgment.
 
 ## The classifier
 
 A separate layer over the change set (ADR-001). Direction-aware rules
 (what the consumer sends vs. what the provider sends) attach a verdict
-and a deterministic reason to every change, and derive a semver label
-from the verdict. The complete rule reference lives in
-[classification.md](classification.md).
+and a deterministic reason to every change and derive a semver label.
+When the location grammar cannot determine a direction — or the rule's
+evidence is insufficient — the verdict is `review`. The full rule
+reference: [classification.md](classification.md).
 
-## Consumer impact mapping
+## Consumer registry and impact mapping
 
-`ConsumerMapper` (`:core`) joins the change set against the **declared
-consumer registry** (ADR-002): a versioned, local-first YAML file
-listing consumers (id, kind, contract, operation selectors). Selectors
-use canonical operation identities, so `/users/{id}` and
-`/users/{userId}` select the same operation; wildcards (`*`) select
-all. Equivalent selectors dedupe deterministically; overlapping
-selectors never produce duplicate impact records.
+The registry is the **declared** consumer knowledge (ADR-002): a
+versioned YAML file of consumers with canonical operation selectors.
+`ConsumerMapper` joins the change set against it: a change maps to
+every consumer whose selector covers the change's operation. The
+honesty boundary is architectural, not cosmetic: "affected" means
+"declares consumption of the changed surface", unregistered consumers
+are invisible by design, and every report states both. Detail:
+[impact-analysis.md](impact-analysis.md).
 
-Honesty boundary: **"affected" means "declares consumption of the
-changed surface"** — unregistered consumers are invisible to
-ContractLens, and the report says so in every output. Mapping decides
-*who might care*; the classifier decides *how bad it is*.
-
-## Adapters
-
-Each parser adapter maps one format into the canonical model and
-enforces its own validation. What is shared: the model, the engine, the
-classifier, the mapper, the reporters. What is adapter-specific: how a
-format's syntax becomes that model.
-
-| Adapter | Module | Scope |
-|---|---|---|
-| OpenAPI 3.0/3.1 | `:openapi-parser` | swagger-parser under the hood; local `$ref`s resolved with cycle/depth guards; remote/multi-file refs rejected; Swagger 2.0 rejected before conversion |
-| GraphQL SDL | `:graphql` | single-file SDL via graphql-java's schema parser; query/mutation fields become operations, types become object schemas |
-| JSON Schema | `:json-schema` | core vocabulary (type, properties, required, items, enum, constraints, nullability); local refs stay as ref nodes; cross-document refs rejected |
-| Consumer registry | `:registry` | versioned YAML, kaml-decoded with strict validation (unknown fields fail) |
-| Usage graph | `:registry` | same boundary and strictness; records which fields consumers read (see below) |
-| Generated-client projection | `:generated-client` | not a parser — a projection of OpenAPI surfaces into generator-convention shape (ADR-006) |
-
-Every adapter is bounded by `MAX_INPUT_BYTES` (10 MB) **before**
-parsing and by its own nesting-depth guard; every failure is a typed
-`ContractError` with a stable code — third-party exceptions never reach
-the CLI.
-
-## The usage graph (integration boundary)
+## Usage graph — where the architecture stops
 
 The usage graph records which fields a consumer *actually reads*, per
 operation and direction — the substrate for future usage-aware
-classification. It is a validated, versioned format with typed errors,
-canonical selectors, and deterministic merging of duplicate operations.
+classification. It is implemented (format, validation, deterministic
+merging) and **deliberately not wired into classification**: that
+requires real usage data, and no producer of such data exists. Wiring
+against an empty dataset would be an untested heuristic that violates
+the deterministic ruleset contract. The boundary is documented in
+[usage-graph.md](usage-graph.md); the revisit condition is recorded in
+ADR-001.
 
-**It is not wired into classification.** Wiring it would require real
-usage data — something recording which fields consumers read — and no
-such producer exists. Classification therefore runs against the whole
-contract, and the graph remains a documented integration boundary: when
-a real usage producer appears, the classifier can be taught to weight
-changes by actual reads.
+## Generated-client projection — why projection exists
 
-## Module layout
+Parsing generated client source was rejected (cross-language fragility,
+generator version noise — ADR-006). Instead, ContractLens **projects
+the contract the way a generator would** (method names, merged request
+objects, normalized return types) and diffs the projections with the
+shared engine. The projection is convention-stable, not byte-exact —
+an honest model of generators, not a generator.
 
-Dependency direction is strictly inward — every adapter depends on
-`:core` only, and `:cli` depends on all of them:
+## Determinism
 
-```
-core             canonical model, error codes, diff, classifier, mapper, registry/usage domain, signal builder
-openapi-parser   OpenAPI -> canonical model
-snapshot-store   snapshot documents, file-backed store, integrity verification
-registry         registry + usage-graph YAML -> validated domain (kaml)
-generated-client OpenAPI surface -> generated-client projection (ADR-006)
-graphql          GraphQL SDL -> canonical model
-json-schema      JSON Schema event -> canonical model
-cli              the contractlens executable (Clikt)
-benchmark        deterministic performance scenarios (tool module)
-fuzz             Jazzer coverage-guided fuzz targets (test-only module)
-```
+Determinism is a requirement, not a feature: identical inputs produce
+byte-identical snapshots, change sets, reports, and signal payloads
+(the two documented exceptions are the variable-metadata fields
+`capturedAt` and `analyzedAt`). It is enforced structurally
+(canonicalization at construction, sorted collections, stable error
+codes) and pinned by property tests and fuzz sweeps. Determinism
+matters because the output is evidence: a CI gate and a human review
+must both see the same answer.
+
+## Explainability
+
+Every change answers What / Where / From / To / Why-it-matters: kind,
+precise location (document-pointer path), from/to summaries, and the
+rule's reason. Locations exist so reports quote the schema path, never
+an internal id. Explainability is what makes `review` verdicts
+actionable and what lets a developer defend a verdict in a merge
+review.
+
+## Failure boundaries
+
+Untrusted and malformed data is contained at every boundary:
+
+- **Inputs** — size-bounded (10 MB) before parsing, depth-guarded,
+  local-refs-only, typed failures (`INPUT_TOO_LARGE`,
+  `UNSUPPORTED_REFERENCE`, `DEPTH_EXCEEDED`, …); third-party exceptions
+  never reach the CLI.
+- **Storage** — content-hash verification on every load; corrupt
+  snapshots are refused, never silently degraded; path escape is
+  pinned by a regression test.
+- **Outputs** — redaction by construction (the model never holds
+  prose); stdout carries command output only; logs go to stderr.
+- **Exit codes** — 0 success, 1 breaking changes, 2 operational
+  failure; code 1 is reserved and never repurposed.
+
+The full threat → boundary → defense → verification map:
+[security.md](security.md).
+
+## Architectural constraints — what it deliberately does not do
+
+- **No network code path.** Local-first is a boundary, not a
+  preference: no remote refs, no servers, no telemetry (ADR-003,
+  ADR-008).
+- **No database.** Files are the storage.
+- **No ML or scoring.** Deterministic rules only.
+- **No generated-source parsing.** Projection, not parsing (ADR-006).
+- **No automatic fixing.** The tool explains; it never edits
+  contracts.
+- **No usage-aware classification yet** — the recorded deferral above.
+- **No confidence tiers in impact mapping** — declared knowledge only.
+
+These constraints are what keep the tool small enough to trust: every
+capability above is a deliberate addition with a recorded decision;
+everything not here is a deliberate boundary with a recorded revisit
+condition.
 
 ## Design principles
 
@@ -179,8 +234,8 @@ fuzz             Jazzer coverage-guided fuzz targets (test-only module)
    reason; every report shows the location.
 2. **Determinism over ML** — identical inputs produce identical
    outputs, test- and fuzz-pinned.
-3. **Conservative classification** — when the evidence is insufficient,
-   the verdict is `review`, never a silent guess in either direction.
-4. **Loud failures** — corrupt snapshots, malformed documents, and
-   oversized inputs fail with typed errors, never silently degrade.
+3. **Conservative classification** — insufficient evidence means
+   `review`, never a silent guess.
+4. **Loud failures** — corrupt, malformed, or oversized inputs fail
+   with typed errors, never silently degrade.
 5. **Local-first** — file-backed storage, no network code path.

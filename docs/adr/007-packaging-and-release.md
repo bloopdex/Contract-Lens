@@ -12,11 +12,11 @@ release process were still open: an artifact a user can download and
 run without building from source, a reproducible way to produce it, and
 checksums so users can verify integrity.
 
-A sibling project (Recall 1.0.7) had already proven a release-bundle
-model — `binary + SHA256SUMS + install scripts + CHANGELOG + LICENSE`
-built by a `scripts/release.ps1`, with publication deliberately
-deferred to the repository hosting decision. That model was adopted
-unchanged.
+A previously shipped local-first CLI had already proven the
+release-bundle model — `binary + SHA256SUMS + install scripts +
+CHANGELOG + LICENSE` built by a `scripts/release.ps1`, with publication
+deliberately deferred to the repository hosting decision. That model
+was adopted unchanged.
 
 ## Decision
 
@@ -78,3 +78,18 @@ unchanged.
 - Revisit when: hosting is decided (then: publication, install scripts
   tested from a real GitHub Release); or distribution size/startup becomes a
   real complaint (ADR-005 revisit condition → native image).
+
+## Verification
+
+- The local release script executed end-to-end: version-literal
+  verification against the build file, clean build + coverage gate,
+  bundle assembly, `SHA256SUMS` written **and re-verified**, artifact
+  smoke test (`--version`, `--help`, `snapshot`, `diff --classify`
+  exit 1 on breaking, `impact`, `generated-diff`, `signal`, the
+  metrics event), working-tree-clean check.
+- Reproducibility: the fat JAR is byte-identical (same SHA-256) across
+  two clean-checkout builds.
+- Docker: the image builds and a classified diff runs inside the
+  container with the correct exit code.
+- Publication remains pending the hosting decision; nothing is claimed
+  as published until it is.

@@ -10,7 +10,8 @@ One release produces:
   for every artifact in the bundle (verified before anything is
   published).
 - `dist/contractlens-<version>/install.ps1`, `install.sh`,
-  `uninstall.ps1` — install scripts (Recall-style).
+  `uninstall.ps1` — install scripts (checksum-verified,
+  PATH update opt-in).
 - `dist/contractlens-<version>/CHANGELOG.md`, `LICENSE`.
 - Docker image `contractlens:<version>` (secondary, CI/container use).
 
@@ -22,7 +23,7 @@ One release produces:
 powershell -ExecutionPolicy Bypass -File scripts\release.ps1 -Version 0.1.0
 ```
 
-The script (mirroring Recall's release.ps1):
+The script:
 
 1. verifies the `-Version` literal against `version = "…"` in the root
    `build.gradle.kts` (strict, not a regex guess);
@@ -42,10 +43,9 @@ The script (mirroring Recall's release.ps1):
 branches, never PRs) and performs the same steps on CI: strict tag
 verification against the build file, full validation, packaging,
 checksum verification, artifact smoke test, tree-clean check, then
-creates the GitHub Release via `gh`. Publication is pending the repo
-hosting decision (BloopLab open decision #3) — the machinery is
-complete and locally verified; nothing is claimed as published until it
-is.
+creates the GitHub Release via `gh`. Publication is pending the
+repository hosting decision — the machinery is complete and locally
+verified; nothing is claimed as published until it is.
 
 ### Cutting a release
 

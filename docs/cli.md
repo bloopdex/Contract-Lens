@@ -9,6 +9,43 @@ Global: `--version` prints the version from the build's single
 authoritative source. `-v/--verbose` raises structured logging to debug
 level (JSON events on stderr).
 
+## Installation
+
+Requires a JRE 17+.
+
+**Release JAR** (the primary artifact, ADR-007):
+
+```
+# download contractlens-<version>-all.jar and SHA256SUMS from the release
+# verify first:
+powershell "(Get-FileHash -Algorithm SHA256 contractlens-0.1.0-all.jar).Hash.ToLowerInvariant()"
+# compare against the SHA256SUMS line, then:
+java -jar contractlens-0.1.0-all.jar --version
+```
+
+**Install scripts** (from the release bundle): `install.ps1`
+(Windows), `install.sh` (Linux/macOS) — install the JAR plus a shim,
+verify the checksum first, PATH update is opt-in. `uninstall.ps1`
+reverses it.
+
+**Docker**:
+
+```
+docker build -t contractlens:0.1.0 .
+docker run --rm -v "$PWD:/work" -w /work contractlens:0.1.0 diff \
+    old.snapshot.json new.snapshot.json --classify
+```
+
+**From source**:
+
+```
+.\gradlew.bat :cli:installDist
+cli\build\install\contractlens\bin\contractlens.bat --version
+```
+
+The release process behind the artifacts (checksums, reproducibility,
+tag-driven publication): [release.md](release.md).
+
 ## Commands
 
 | Command | Purpose |

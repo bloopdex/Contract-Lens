@@ -5,6 +5,29 @@ implementation is `Classifier` in `:core`, pinned by the 26-case
 fixture corpus and property tests; this document explains the behavior
 — it does not reproduce the code.
 
+## The classification problem
+
+"Breaking" is not a property of a diff — it is a property of *who uses
+what*. The same structural change can mean different things depending
+on which side of the API it sits on (request vs response), what the
+consumer does with it, and how tolerant the provider is at runtime.
+A static contract document carries the structural facts and the
+direction — and not much else. The ruleset's job is to answer, from
+that evidence alone:
+
+- *certain* cases with a definitive verdict (a removed operation
+  breaks consumers of it);
+- *insufficient-evidence* cases with `review` rather than a guess
+  (whether a removed request property breaks anyone depends on the
+  provider's unknown-field handling, which the contract does not
+  express).
+
+That split — decisive where the evidence is decisive, honest where it
+is not — is the whole design. The research behind it (the tool survey,
+the japicmp/Revapi disagreement study, the directionality evidence from
+schema registries and protobuf tooling) is recorded in
+[research/classification-strategy.md](research/classification-strategy.md).
+
 ## The three verdicts
 
 | Verdict | Meaning |
@@ -142,10 +165,67 @@ contract cannot distinguish them — so the tool surfaces the pair for
 human judgment with a deterministic pairing rule (first unused removal
 with first unused addition of the same type, sorted by location).
 
-## Undetermined direction
+## Unknown and undetermined changes
 
-Any direction-sensitive rule whose change location carries no
-direction grammar falls back to `review` with the reason "the change's
-direction could not be determined". This cannot be triggered by the
-diff engine's own output shapes, but the classifier defends against it
-rather than guessing.
+- **Undetermined direction:** any direction-sensitive rule whose change
+  location carries no direction grammar falls back to `review` with the
+  reason "the change's direction could not be determined". This cannot
+  be triggered by the diff engine's own output shapes, but the
+  classifier defends against it rather than guessing.
+- **Evidence-poor kinds:** `REF_TARGET_CHANGED`, `DEFAULT_CHANGED`, and
+  `ITEMS_CHANGED` are always `review` (see the table above) — the
+  substitution, the default, or the item schema changed, and the
+  contract does not carry what the impact depends on.
+- **Anything the classifier does not recognize is `review`**, never a
+  silent default in either direction.
+
+## Examples
+
+**Enum narrowed in the response (breaking).**
+
+```yaml
+# before                         # after
+enum: [admin, editor, viewer]    enum: [admin, viewer]
+```
+
+`ENUM_CHANGED`, response direction → **breaking (major)** — a consumer
+that observed `editor` can no longer rely on it. (The same change in a
+*request* body is also breaking: old consumers may still send it.)
+
+**Optional request property added (non-breaking, additive).**
+
+```yaml
+# before                          # after
+properties:                       properties:
+  name: {type: string}              name: {type: string}
+                                    role: {type: string}   # new, not required
+```
+
+`PROPERTY_ADDED`, request direction → **non-breaking (minor)** —
+existing consumers never send it, and the provider does not require it.
+
+**Request property removed (review).**
+
+```yaml
+# before                          # after
+properties:                       properties:
+  name: {type: string}              name: {type: string}   # legacyField removed
+  legacyField: {type: string}
+```
+
+`PROPERTY_REMOVED`, request direction → **review** — whether consumers
+still sending `legacyField` break depends on the provider's
+unknown-field handling, which the contract does not express. The
+response-direction counterpart is unambiguously breaking.
+
+**Response required property added (review).**
+
+```yaml
+# before                          # after
+required: [id]                    required: [id, status]
+```
+
+`REQUIRED_PROPERTY_ADDED`, response direction → **review** — strict
+clients may reject a response carrying an unknown required property;
+lenient ones will not. (In the request direction this is breaking:
+consumers do not send the new field.)

@@ -2,9 +2,22 @@
 
 All notable changes to ContractLens are documented here. Versioning is
 semver per the classifier's own ruleset (breaking → major); releases are
-tag-driven (`vX.Y.Z`) per ADR-007.
+tag-driven (`vX.Y.Z`) per ADR-007. Known limitations and their revisit
+conditions live in [docs/limitations.md](docs/limitations.md).
 
 ## Unreleased — production delivery & continuous verification
+
+- Documentation: the repository now ships the full engineering
+  documentation system — an index, standalone concept docs (canonical
+  model, impact analysis, generated clients, GraphQL, JSON Schema,
+  usage graph, testing, limitations), the performance record, and the
+  research records; ADR-001..006 were migrated from the research notes
+  into [docs/adr/](docs/adr/) so the reasoning ships with the code.
+- Documentation consistency: fixed a stale dependency narrative in
+  the security review (swagger-parser's second upgrade) and a wrong
+  structural-change figure in the benchmark harness metadata (the pair
+  carries 96 changes, not ~30; the figure is now generated from the
+  real change count).
 
 - CI architecture: PR pipeline (build/test matrix, lint, coverage gate,
   security, fuzz smoke, benchmark smoke), nightly pipeline (long fuzz

@@ -40,25 +40,13 @@ Gradle build caching is enabled via setup-gradle).
 
 ## Benchmark comparison policy
 
-Implemented in `BenchmarkCheck.kt` (unit-tested):
-
-- **FAIL** when a scenario is BOTH >3.0× its committed baseline median
-  AND >1000 ms, OR any scenario exceeds 2000 ms absolute.
-- **WARN** (investigate, never silently ignored) at 2.0×-3.0×, or when a
-  scenario has no committed baseline.
-- The FAIL gate applies only on the OS family of the committed baseline
-  (windows); cross-OS runs are informational.
-- Baselines are ONLY rewritten by a conscious maintainer run
-  (`:benchmark:bench`) — never automatically, never to make a
-  comparison pass.
-
-Rationale: the scenarios measure 1-50 ms operations; shared-runner
-scheduling/GC noise routinely doubles a run, so a bare ratio would fail
-on noise. The 3× + 1 s floor catches real regressions while letting
-noise through; the WARN band keeps intermediate regressions visible.
-First local comparison run (2026-08-19): 8 OK, 1 WARN
-(registry-parse-1k, 2.89× on a busy machine) — exactly the intended
-behavior.
+The FAIL/WARN thresholds and their rationale live in
+[performance.md](performance.md) (the unit-tested policy in
+`BenchmarkCheck.kt` is the implementation). CI specifics: the
+comparison gate runs nightly on the baseline's OS family
+(cross-OS runs are informational by construction), and baselines are
+ONLY rewritten by a conscious maintainer run (`:benchmark:bench`) —
+never automatically, never to make a comparison pass.
 
 ## Failure semantics (per stage)
 
@@ -83,7 +71,7 @@ developer runs:
 .\gradlew.bat build                                   # build-test
 .\gradlew.bat koverVerify koverXmlReport              # coverage
 .\gradlew.bat assemble --dependency-verification=strict
-docker run --rm -v "${PWD}:/src" -w /src ghcr.io/google/osv-scanner scan -r .
+docker run --rm -v "${PWD}:/src" -w /src ghcr.io/google/osv-scanner scan --config=osv-scanner.toml -r .
 .\gradlew.bat :cli:fuzz -PfuzzIterations=5000 :core:fuzz -PfuzzIterations=5000
 .\gradlew.bat :fuzz:jazzerFuzz                        # regression replay
 .\gradlew.bat :fuzz:jazzerFuzz -Pjazzer.fuzz=1        # coverage-guided
