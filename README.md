@@ -4,293 +4,183 @@ Local-first API contract impact-analysis tool: detect contract changes,
 classify them as breaking / non-breaking / review, and explain which
 known consumers may be affected — before merge.
 
-**Status:** Phase 4 (Generated Clients & Extended Contracts) — the full
-pipeline is implemented: structural diffing, the ADR-001 classifier
-(breaking / non-breaking / review verdicts + semver labels), explicit
-consumer-registry impact mapping, generated-client projection diffing,
-GraphQL SDL and JSON Schema adapters, and the usage-graph format.
-Consumer usage-aware classification is the documented Phase 4 follow-up.
+**Status:** Phase 6 (Production Delivery, CI & Continuous
+Verification). The pipeline is complete — phases 0-5 built the
+analysis tool, Phase 6 added the CI architecture, coverage-guided
+fuzzing, dependency/supply-chain automation, benchmark regression
+gating, packaging & release with checksums, and the DeployScore signal
+emitter. GitHub execution and publication are pending the BloopLab repo
+hosting decision; everything runs locally and is verified (see
+[docs/ci.md](docs/ci.md)).
 
-## What exists today (Phase 4)
+## What it does
 
 - Canonical contract model (`:core`) — one format-neutral representation
-  of a contract surface with source locations for explainability.
-- OpenAPI 3.0/3.1 parser adapter (`:openapi-parser`) — swagger-parser is
-  an internal detail; `$ref`s are resolved with cycle and depth guards;
-  Swagger 2.0 and unknown versions are rejected before conversion.
+  with source locations for explainability.
+- OpenAPI 3.0/3.1 parser (`:openapi-parser`), GraphQL SDL adapter
+  (`:graphql`), JSON Schema event adapter (`:json-schema`) — local
+  `$ref`s only, cycle/depth guards, 10 MB input limit, typed errors.
 - File-backed snapshot store (`:snapshot-store`) — snapshots keyed by
-  contract + git commit SHA, content-hash verified, index rebuilt by
-  directory scan on every start.
-- Consumer registry (`:core` + `:registry`) — versioned YAML registry
-  (Backstage-shaped, ADR-002), kaml-decoded with strict validation, and
-  a pure consumer mapper producing deterministic per-consumer impacts.
-- Classifier (`:core`, ADR-001) — the Phase 0 ruleset as a separate pure
-  layer: direction-aware verdicts, deterministic reasons, semver labels,
-  rename candidates stay review; `diff --classify` and `impact` produce
-  it and exit 1 on breaking changes.
-- Generated-client projection (`:generated-client`, ADR-006) —
-  deterministic generator conventions over OpenAPI snapshots, diffed by
-  the shared engine; `generated-diff --style ts|kotlin|java`.
-- GraphQL SDL adapter (`:graphql`) and JSON Schema event adapter
-  (`:json-schema`) — Phase 4 groundwork per ADR-004, feeding the same
-  snapshots, engine, and classifier (`snapshot` auto-detects `.graphql`,
-  `--format json-schema` covers events).
-- Usage graph (`:core` + `:registry`) — versioned format + typed model +
-  strict validation recording which fields consumers read; not yet wired
-  into classification (documented follow-up).
-- CLI (`:cli`) — `contractlens snapshot | verify | list | diff |
-  impact | generated-diff` with structured JSON logs on stderr.
+  contract + git commit SHA, content-hash verified, corruption refused
+  loudly.
+- Structural diff engine — 26-kind change taxonomy with recursive
+  leaf-level locations; renames never inferred.
+- ADR-001 classifier — direction-aware verdicts
+  (breaking / non-breaking / review) with deterministic reasons and
+  derived semver labels (`diff --classify`, exit 1 on breaking).
+- Consumer registry (ADR-002) + impact mapping — explicit, versioned,
+  local-first YAML; "affected" means "declares consumption of the
+  changed surface" (unregistered consumers are invisible — stated
+  honestly in every report).
+- Generated-client projection diffing (ADR-006) —
+  `generated-diff --style ts|kotlin|java`.
+- Usage graph format — versioned + validated, deliberately NOT wired
+  into classification (no real usage data exists; documented).
+- DeployScore signal (ADR-008) — `contractlens signal` emits the
+  metadata-only `contractlens-signal` v1 payload to stdout or a file;
+  offline by construction.
 
-## Module layout
+## Install
+
+Requires a JRE 17+.
+
+**Release JAR** (the primary artifact, ADR-007):
 
 ```
-core             canonical model, registry/usage domain, diff, classifier, mapper
-openapi-parser   OpenAPI -> canonical model adapter
-snapshot-store   snapshot documents, file-backed store, git identity
-registry         registry + usage-graph YAML -> validated domain (kaml)
-generated-client OpenAPI surface -> generated-client projection (ADR-006)
-graphql          GraphQL SDL -> canonical model (graphql-java SchemaParser)
-json-schema      JSON Schema event -> canonical model (kotlinx JSON)
-cli              the contractlens executable (Clikt)
+# download contractlens-<version>-all.jar and SHA256SUMS from the release
+# verify FIRST:
+powershell "(Get-FileHash -Algorithm SHA256 contractlens-0.1.0-all.jar).Hash.ToLowerInvariant()"
+# compare against the SHA256SUMS line, then:
+java -jar contractlens-0.1.0-all.jar --version
 ```
 
-Dependency direction is strictly inward: every adapter module depends on
-`:core` only, and `:cli` depends on all of them.
+**Install scripts** (from the release bundle): `install.ps1`
+(Windows), `install.sh` (Linux/macOS) — install the JAR + a shim,
+verify the checksum first, PATH update is opt-in. `uninstall.ps1`
+reverses it.
 
-## Build
+**Docker** (CI/container use):
 
-Requires a JDK 17+ (CI runs JVM 17 and 21 on Linux and Windows).
-
-```powershell
-$env:JAVA_HOME = "C:\Program Files\Java\..."   # or your JDK
-.\gradlew.bat build          # compile + ktlintCheck + full test suite
-.\gradlew.bat ktlintFormat   # auto-format
-.\gradlew.bat :cli:fuzz -PfuzzIterations=200000   # recorded fuzz sweeps
-.\gradlew.bat :core:fuzz -PfuzzIterations=200000  # classifier invariant fuzz
-.\gradlew.bat :benchmark:bench                    # performance baseline
-.\gradlew.bat koverXmlReport                      # aggregate coverage report
-.\gradlew.bat koverVerify                         # coverage gate
+```
+docker build -t contractlens:0.1.0 .
+docker run --rm -v "$PWD:/work" -w /work contractlens:0.1.0 diff \
+    old.snapshot.json new.snapshot.json --classify
 ```
 
-Phase 5 hardening: `docs/benchmarks.md` (methodology + recorded
-baseline), `docs/security.md` (reviewed surfaces, findings, limits),
-`docs/coverage.md` (coverage policy and gate rationale).
+**From source**:
+
+```
+.\gradlew.bat :cli:installDist
+cli\build\install\contractlens\bin\contractlens.bat --version
+```
+
+## Build, test, verify
+
+```
+.\gradlew.bat build                       # compile + ktlint + ALL tests
+.\gradlew.bat ktlintFormat                # auto-format
+.\gradlew.bat koverVerify                 # coverage gate (per-module minimums)
+.\gradlew.bat :cli:fuzz -PfuzzIterations=5000          # seeded fuzz smoke
+.\gradlew.bat :fuzz:jazzerFuzz                        # Jazzer crash replay
+.\gradlew.bat :fuzz:jazzerFuzz -Pjazzer.fuzz=1        # Jazzer fuzzing (2m/target)
+.\gradlew.bat :benchmark:benchSmoke                   # benchmark smoke
+.\gradlew.bat :benchmark:benchCheck                   # benchmark vs baseline
+```
+
+How CI validates the project, and how a release is produced, are
+documented in [docs/ci.md](docs/ci.md) and
+[docs/release.md](docs/release.md) — including the local equivalent of
+every CI step.
 
 ## Usage
 
-```powershell
-# capture a contract into a snapshot (commit SHA from git HEAD)
-.\gradlew.bat :cli:run --args="snapshot api/openapi.yaml --store .contractlens/snapshots"
-
-# or the installed script/distribution once packaged (Phase 6)
-contractlens snapshot api/openapi.yaml
+```
+contractlens snapshot api/openapi.yaml --store .contractlens/snapshots
 contractlens snapshot verify .contractlens/snapshots/users@<sha>.snapshot.json
 contractlens snapshot list --store .contractlens/snapshots
 contractlens diff old.snapshot.json new.snapshot.json
-contractlens diff old.snapshot.json new.snapshot.json --json
-contractlens diff old.snapshot.json new.snapshot.json --classify
+contractlens diff old.snapshot.json new.snapshot.json --classify      # verdicts + exit 1 on breaking
 contractlens impact old.snapshot.json new.snapshot.json --registry registry.yaml
-contractlens impact old.snapshot.json new.snapshot.json --registry registry.yaml --json
 contractlens generated-diff old.snapshot.json new.snapshot.json --style ts --classify
-contractlens snapshot api.graphql                       # GraphQL SDL (extension-detected)
-contractlens snapshot event.json --format json-schema   # JSON Schema event contract
+contractlens signal old.snapshot.json new.snapshot.json --registry registry.yaml   # DeployScore feed
+contractlens snapshot api.graphql                          # GraphQL SDL (extension-detected)
+contractlens snapshot event.json --format json-schema      # JSON Schema event contract
+contractlens --version
 ```
 
-Exit codes: `0` success (no breaking changes, or no classification
-requested), `1` breaking changes detected (`diff --classify`, `impact`,
-`generated-diff --classify`), `2` operational errors (bad usage, bad
-input, corrupt snapshots).
+Exit codes: `0` success, `1` breaking changes detected
+(`diff --classify`, `impact`, `generated-diff --classify`, `signal`),
+`2` operational error. stdout carries output only; structured logs
+(JSON lines, incl. the analysis metrics) go to stderr.
 
-## Classification (ADR-001)
+## The pre-merge GitHub Action
 
-The classifier is a separate layer over the structural change set. Each
-change gets a verdict and a deterministic reason:
+`action.yml` is a reusable composite action: snapshot base → snapshot
+head → analysis → fail on breaking changes (optional PR comment,
+opt-in). Inputs: `old-spec`, `new-spec`, `registry` (optional),
+`contract-name` (optional), `fail-on-breaking` (default true),
+`comment-on-pr` (default false). Outputs: `report`, `breaking`.
+The analysis core runs offline and identically locally — the
+pass/block/registry/no-fail cases are exercised by
+`scripts/test-action.ps1` and the nightly `action-e2e` job.
 
-```
-  REQUIRED_PROPERTY_ADDED POST /sessions → request body → schema → properties.webhookUrl : optional → required [breaking] (major)
-    reason: consumers that omit the new required property fail validation
-```
-
-Three verdicts: **breaking / non-breaking / review** — direction-aware
-(request: the consumer sends, the provider validates; response: the
-provider sends, the consumer reads), conservative (undeterminable
-direction or undocumented kinds are review, never silent guesses), and
-renames stay review candidates (never auto-classified). Semver labels
-derive from verdicts: breaking -> major, non-breaking + additive ->
-minor, other non-breaking -> patch, review -> no label. The documented
-contextual rules are implemented: required-property additions with a
-JSON Schema default soften to review, and requiredness of added
-parameters comes from the new surface. The 26-case end-to-end fixture
-corpus (the Phase 0 catalog) pins every rule.
-
-## `contractlens generated-diff` (ADR-006)
-
-Projects both snapshots through deterministic generator conventions —
-client method names (`getUsersById` from `GET /users/{id}`), merged
-request objects (parameters + body), normalized return types (void when
-no response content) — and diffs the projections with the SHARED
-engine; `--classify` adds verdicts and exit 1. Styles `ts | kotlin |
-java` share naming conventions at this depth (pinned by tests); the
-projection is convention-stable generator knowledge, NOT byte-exact
-generator output and NOT parsed generated source — model TYPE names are
-not reported (the canonical model resolves `$ref`s inline), which is a
-documented limitation.
-
-## Usage graph (Phase 4 groundwork)
-
-Records which fields a consumer actually reads, per operation and
-direction — the substrate for future usage-aware classification:
-
-```yaml
-version: 1
-consumers:
-  - id: thornwa-frontend
-    contract: thorn-api
-    operations:
-      - operation: GET /contacts/{id}
-        responseFields: [email, profile.address.city]
-```
-
-Operation selectors reuse the registry's canonical identity; duplicate
-operations merge deterministically; duplicate (consumer, contract)
-records fail with `USAGE_DUPLICATE_RECORD`. Parsed by `UsageParser`
-(:registry); not wired into classification or mapping yet.
-
-## `contractlens diff`
-
-Diffs two verified snapshots (integrity is never bypassed) and prints
-the deterministic structural change set:
-
-```
-old: users @ 0123...
-new: users @ 4567...
-changes: 3 (added 1, removed 1, changed 1)
-  TYPE_CHANGED GET /users → response 200 → schema → items → properties.email : string → integer
-```
-
-`--json` emits a stable `contractlens-diff` v1 report with summary
-counts and the full change list. The change taxonomy is documented in
-`core/src/main/kotlin/dev/bloopdex/contractlens/core/diff/Change.kt` —
-kinds are structural facts (operation/parameter/request/response/schema
-levels, recursive property/array/constraint/enum/nullability diffs with
-precise logical locations), and `verdict` is intentionally null until
-the classifier layer exists. Renames are never inferred: a removed
-field and an added field are two independent structural facts.
-
-## `contractlens impact`
-
-Diffs two verified snapshots of the same contract, loads the consumer
-registry, and maps every structural change to the registered consumers
-that declare consumption of the affected operation:
-
-```
-contract: thorn-api
-changes: 3
-registered consumers: 2
-affected consumers: 1
-mapped changes: 2
-
-consumer thornwa-frontend (frontend)
-  GET /users/{id}
-    PROPERTY_REMOVED GET /users/{id} → response 200 → schema → properties.email
-    reason: consumer declares this operation
-
-unmapped changes: 2
-  OPERATION_REMOVED GET /audit
-  (no registered consumer declares these operations)
-note: unregistered consumers are not visible to ContractLens.
-```
-
-`--json` emits a stable `contractlens-impact` v1 report: summary counts
-(changes, affected consumers, mapped change-consumer associations), the
-full change set (unmatched changes stay visible), and per-consumer
-impacts preserving each change and its mapping reason.
-
-### Consumer registry (v1)
-
-Explicit, versioned, local-first YAML (ADR-002). See
-`docs/examples/thornwa-registry.yaml` for a real dogfooding registry:
+## Registry (v1)
 
 ```yaml
 version: 1
 consumers:
   - id: thornwa-frontend          # stable identity — must be unique
     kind: frontend                # frontend | service | sdk | generated-client | integration
-    contract: thorn-api           # the snapshot contract name
+    contract: thorn-api
     operations:                   # "*" (all) or METHOD + path-template
       - GET /users/{id}
     contact: frontend team        # optional
     notes: optional free-form     # optional
 ```
 
-Validation is strict and deterministic: unsupported versions
-(`REGISTRY_VERSION_UNSUPPORTED`), duplicate ids (`REGISTRY_DUPLICATE_ID`),
-invalid selectors (`REGISTRY_SELECTOR_INVALID`), and unknown fields
-(kaml strict mode) all fail with typed errors — never silently
-reinterpreted. Selectors use the canonical operation identity
-(lowercase method + normalized path template), so `/users/{id}` and
-`/users/{userId}` are the same operation. Equivalent selectors dedupe
-deterministically; overlapping selectors never produce duplicate impact
-records.
+## Security
 
-Honesty boundary (ADR-002): registered consumers are the DECLARED
-knowledge — unregistered consumers are invisible to ContractLens, and
-"affected" means "declares consumption of the changed surface", never
-"will definitely break" (the classifier decides breakage later).
+Local-first: no network code path exists. Input limits, store-path
+sanitization, redaction-by-construction, and typed failures are
+reviewed in [docs/security.md](docs/security.md); the vulnerability
+policy, reporting channel, and dependency-scanning policy are in
+[SECURITY.md](SECURITY.md). Dependency resolution integrity is enforced
+(`--dependency-verification=strict` against committed verification
+metadata) and OSV-Scanner runs over the committed lockfiles.
 
-## Snapshot format (v1)
+## Known limitations
 
-A snapshot is canonical JSON:
-
-```json
-{
-  "formatVersion": 1,
-  "contract": "users",
-  "sourcePath": "/abs/path/openapi.yaml",
-  "identity": {"kind": "git-commit", "sha": "<40-hex>"},
-  "capturedAt": "<ISO-8601, variable metadata>",
-  "contentHash": "<sha256 over the deterministic envelope>",
-  "surface": { "name": "users", "kind": "openapi", "formatVersion": "3.0.3", "operations": [...] }
-}
-```
-
-The content hash covers everything except `capturedAt`; modified or
-corrupted snapshots are refused loudly and never trusted. Identical
-content always produces identical bytes (determinism is pinned by tests).
-
-## Known limitations (Phase 5)
-
-- Local `$ref`s only; multi-file and remote references are rejected
-  with `UNSUPPORTED_REFERENCE` (open question from Phase 0).
-- Inputs are bounded by `MAX_INPUT_BYTES` (10 MB) and per-adapter
-  depth guards; full resource-limit hardening (anchor bombs, deeper
-  adversarial cases) plus Jazzer coverage-guided fuzzing are Phase 6 CI
-  items.
-- `x-stability-level` exemptions are not implemented — the canonical
-  model does not carry stability levels (Phase 1 scope).
-- Static source discovery does not exist and is out of scope for the
-  core (ADR-002): consumers are only what the registry declares.
-- The usage graph is validated and parsed but NOT wired into
-  classification — Phase 5 evaluated the follow-up and deferred it:
-  no real usage data exists yet (nothing records field reads), and
-  wiring against an empty dataset would be an untested heuristic.
-  Documented on the Phase 5 page.
-- Generated-client projection is convention-stable, not byte-exact;
-  model TYPE names are not reported (`$ref`s resolve inline).
-- GraphQL/JSON Schema adapters are groundwork: single-file SDL,
-  JSON Schema core vocabulary, local refs stay REF nodes.
-- `impact` requires both snapshots to be the same contract name
+- Local `$ref`s only; multi-file/remote references rejected
+  (`UNSUPPORTED_REFERENCE`).
+- Inputs bounded by `MAX_INPUT_BYTES` (10 MB) + per-adapter depth
+  guards.
+- `x-stability-level` exemptions not implemented (the canonical model
+  carries no stability levels).
+- The usage graph is validated but NOT wired into classification —
+  deferred with evidence (no real usage data exists; documented on the
+  Phase 5 page).
+- Generated-client projection is convention-stable, not byte-exact
+  generator output; model TYPE names are not reported.
+- `impact` requires both snapshots to share one contract name
   (`CONTRACT_MISMATCH` otherwise); contract renames are not mapped.
-- Strict OpenAPI validation can refuse real-world dumps with undeclared
-  path parameters (found on thorn-api's NestJS dump in dogfooding) —
-  that is the correct loud failure; the fix belongs to the spec source.
-- Systematic dependency scanning and checksummed releases are Phase 6
-  CI items (the Phase 5 dependency spot-check is in `docs/security.md`,
-  including the swagger-parser advisory upgrade).
-- No remote configured for this repository yet — `.github/workflows/ci.yml`
-  runs once the repo is pushed to a host.
+- Strict OpenAPI validation refuses real-world dumps with undeclared
+  path parameters (found on thorn-api's NestJS dump) — correct loud
+  failure; the fix belongs to the spec source.
+- CI workflows and release publication execute only once the repo is
+  hosted (BloopLab open decision #3); every step is verified locally.
+- The DeployScore feed is a producer-side contract only — the receiving
+  system does not exist yet (ADR-008).
 
 ## Documentation
 
-The design record lives in the BloopLab Logseq graph (Phase 0: research,
-canonical model, ruleset, ADR-001..005; Phase 1: this foundation).
+- [docs/ci.md](docs/ci.md) — CI architecture, failure policy, local equivalents
+- [docs/release.md](docs/release.md) — release process + checksum verification
+- [docs/fuzzing.md](docs/fuzzing.md) — the seeded harness + Jazzer layers
+- [docs/benchmarks.md](docs/benchmarks.md) — methodology + recorded baseline
+- [docs/coverage.md](docs/coverage.md) — coverage policy and gate rationale
+- [docs/security.md](docs/security.md) — security review and findings
+- [docs/deployscore-feed.md](docs/deployscore-feed.md) — the signal contract
+- [docs/adr/INDEX.md](docs/adr/INDEX.md) — ADR index (ADR-001..006 live
+  in the BloopLab Logseq graph; ADR-007/008 in this repository)
+- [CONTRIBUTING.md](CONTRIBUTING.md) — ground rules, incl. "never
+  weaken tests to make CI green" and "never fabricate evidence"

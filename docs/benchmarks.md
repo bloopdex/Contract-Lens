@@ -31,8 +31,37 @@ degenerate-fixture bug found while building the baseline, not an engine
 defect.
 
 The results are written to `docs/benchmarks/baseline.json` on every
-run; the human-readable table goes to stdout. Phase 6 wires the same
-scenarios into nightly CI as regression benchmarks.
+run; the human-readable table goes to stdout. Phase 6 wired the same
+scenarios into nightly CI as regression benchmarks (`:benchmark:benchCheck`).
+
+## Phase 6 automation (2026-08-19)
+
+- `:benchmark:bench` — full suite; REWRITES the committed baseline (a
+  conscious maintainer action, never automatic).
+- `:benchmark:benchSmoke` — reduced timing runs, writes nothing (the PR
+  gate).
+- `:benchmark:benchCheck` — full suite + comparison against the
+  committed baseline, exit 1 on a FAIL-level regression.
+
+Comparison policy (unit-tested in `BenchmarkCheckTest`):
+
+- **FAIL** when a scenario is BOTH >3.0× its committed baseline median
+  AND >1000 ms, or any scenario exceeds 2000 ms absolute.
+- **WARN** (investigate, never silently ignored) at 2.0×-3.0×, or when a
+  scenario has no committed baseline.
+- The FAIL gate applies only on the OS family of the committed baseline
+  (Windows); cross-OS runs are informational by construction — different
+  OSes are never compared as equivalent measurements.
+- Baselines are only rewritten by a conscious `:benchmark:bench` run.
+
+Rationale: the scenarios measure 1-50 ms operations; shared-runner
+scheduling/GC noise routinely doubles a run, so a bare ratio would fail
+on noise. The 3× + 1 s floor catches real regressions while letting
+noise through; the WARN band keeps intermediate regressions visible.
+First local comparison run: 8 OK, 1 WARN (registry-parse-1k, 2.89× on a
+busy machine) — the intended behavior. CI benchmark environments
+(GitHub windows-latest) differ from this workstation baseline and are
+recorded in the nightly results artifacts.
 
 ## Baseline (2026-08-19)
 

@@ -1,9 +1,10 @@
-# ContractLens security review (Phase 5)
+# ContractLens security review (Phase 5 review + Phase 6 automation)
 
 Status: reviewed surfaces + findings below. This is NOT a claim of
-Phase 5 "security hardening complete" beyond what is written here;
-dependency scanning lands in CI with Phase 6, and the threat model
-lives on the Phase 0 page.
+"security hardening complete" beyond what is written here; the threat
+model lives on the Phase 0 page. Phase 6 added the automated layer
+(SECURITY.md policy, dependency verification, OSV scanning, CI
+permissions); the Phase 5 review below is the manual foundation.
 
 ## Reviewed surfaces and findings
 
@@ -75,9 +76,58 @@ lives on the Phase 0 page.
 - Systematic dependency/supply-chain scanning is a Phase 6 CI item
   (documented on the Phase 5 page), along with checksummed releases.
 
+## Phase 6 automation (implemented 2026-08-19)
+
+- **Dependency verification** — every resolved artifact is SHA-256
+  pinned in the committed `gradle/verification-metadata.xml`; CI
+  resolves with `--dependency-verification=strict` (regenerated only
+  after a deliberate, reviewed upgrade).
+- **Dependency locking** — every module commits a `gradle.lockfile`;
+  updates go through Dependabot PRs once hosted.
+- **Vulnerability scanning** — OSV-Scanner over the committed lockfiles
+  (CI jobs + a documented local docker invocation); the failure policy
+  per severity is in SECURITY.md (critical/high block; waivers are
+  explicit, documented, time-bounded).
+- **CI permissions** — PR workflows hold `contents: read` only; the
+  release workflow (`contents: write`) is reachable exclusively via
+  maintainer tag pushes; action inputs reach scripts only through
+  environment variables (no shell interpolation).
+- **Release artifacts** — SHA-256 checksums produced, verified during
+  the release process, and install scripts verify them before touching
+  the filesystem (ADR-007).
+
+### First scan results and fixes (OSV-Scanner, 2026-08-19, real output)
+
+Initial scan over the committed lockfiles: 3 High, several Medium/Low.
+
+| Finding | Severity | Fix |
+|---|---|---|
+| jackson-core 2.21.1 — GHSA-r7wm-3cxj-wff9 (StreamReadConstraints bypass, async parser only) | 8.7 High | lifted to 2.21.5 via a documented resolution rule (jackson is on the untrusted-OpenAPI parse path) |
+| jackson-databind 2.21.1 — GHSA-j3rv-43j4-c7qm, GHSA-rmj7-2vxq-3g9f | 8.1 High | lifted to 2.21.5 (same rule) |
+| jackson-databind 2.21.1 — five 5.3-6.5 Mediums | Medium | lifted to 2.21.5 |
+| swagger-parser 2.1.40 transitives | — | upgraded to 2.1.44 (also cleared rhino 1.7.7.2) |
+| logback-core 1.3.15 — GHSA-25qh-j22f-pwp8 (ktlint plugin's tool config, build-time only) | 5.9 Medium | lifted to 1.5.34 via resolution rule |
+| log4j-api 2.26.0 — GHSA-qv9r-c865-cp47 (buildscript classpath via the ktlint plugin) | 6.3 Medium | lifted to 2.26.1 via a buildscript resolution rule |
+| commons-lang3 3.17.0 — GHSA-j288-q9x7-2f5v (buildscript classpath) | 6.5 Medium | lifted to 3.18.0 via a buildscript resolution rule |
+
+Post-fix scan: **clean** (exit 0). One explicit, time-bounded waiver in
+`osv-scanner.toml` (surfaces as "Filtered 1 vulnerability"):
+
+- kotlin-gradle-plugin 2.2.0 — GHSA-r937-wjx7-w2jp (6.7 Medium,
+  build-time compiler plugin, never shipped); the only published fix is
+  2.4.20-Beta1 — adopting a beta toolchain as a security reaction is
+  not justified. Waiver expires 2027-02-19 (or earlier: bump when a
+  stable Kotlin with the fix lands).
+
+Resolution rules live in the root `build.gradle.kts` with per-rule
+rationale comments; nothing was silently suppressed.
+
 ## Remaining limitations
-- No fuzzing via Jazzer yet (deferred to Phase 6 CI — see the Phase 5
-  page fuzz note); the local seeded fuzz harness is the current
-  evidence.
-- Symlink-specific handling, permission-edge testing (e.g. unreadable
-  files on Windows) and supply-chain scanning remain for Phase 6 CI.
+
+- Jazzer coverage-guided fuzzing now runs as a bounded nightly job and
+  was verified locally (19,537 runs / 121 s / 0 crashes on the OpenAPI
+  target) — see docs/fuzzing.md.
+- Symlink-specific handling and permission-edge testing (e.g. unreadable
+  files on Windows) remain open follow-ups.
+- The OSV scan and the CI jobs execute on the hosted runner once the
+  repo hosting decision lands; the local equivalents have been run.
