@@ -1,25 +1,40 @@
-# ContractLens coverage policy (Phase 5)
+# ContractLens coverage policy (Phase 5 gate + Phase 6 measurement update)
 
 ## Tooling
 
 Kover 0.9.9 (`org.jetbrains.kotlinx.kover`), applied to every module.
-`gradlew koverXmlReport` produces per-module reports and the root
-aggregate (`build/reports/kover/report.xml`); `gradlew koverVerify`
-enforces the per-module gate below.
+`gradlew koverVerify` enforces the per-module gate below (the gate is
+the enforcement — it runs in CI). Reports: each module writes
+`<module>/build/reports/kover/report.xml`.
 
-## Baseline (2026-08-19, clean instrumented run)
+Phase 6 measurement note (2026-08-20): the ROOT aggregate report
+(`build/reports/kover/report.xml`) is now empty — Kover 0.9.9's root
+merge yields no data when a subproject without main sources exists
+(the new test-only `:fuzz` module). The gate is unaffected (per-module
+rules); aggregate numbers below are the per-module reports summed, the
+same scope as the gate. The CI coverage job uploads the per-module
+reports.
+
+## Baseline (2026-08-20, clean instrumented run; per-module report sums)
 
 | Module | Line coverage |
 |---|---|
-| core | 85.8% (5,125 / 5,970) |
-| openapi-parser | 94.4% |
-| snapshot-store | 94.4% |
+| core | 86.5% (1,112 / 1,286) |
+| openapi-parser | 94.1% (239 / 254) |
+| snapshot-store | 94.4% (118 / 125) |
 | registry | 88.9% |
 | generated-client | 100.0% |
-| graphql | 90.9% |
-| json-schema | 95.5% |
-| cli | 85.9% |
-| **aggregate** | **88.5%** (10,890 / 12,310) |
+| graphql | 90.9% (149 / 164) |
+| json-schema | 95.5% (105 / 110) |
+| cli | 86.6% (496 / 573) |
+| benchmark | 16.1% (tool module, no gate — most code executes only under `:benchmark:bench`) |
+| **aggregate (gate scope, benchmark excluded)** | **88.7%** (2,323 / 2,618) |
+
+(The Phase 5 table listed aggregate 88.5% (10,890 / 12,310) computed
+from the root report — those counters exceed the actual source sizes
+(e.g. core has ~2,500 source lines), an artifact of the then-working
+root merge. The percentages were always the meaningful number and they
+agree: 88.5% then, 88.7% now.)
 
 ## Gate
 
@@ -28,10 +43,11 @@ baseline (root `build.gradle.kts`, `coverageBounds`):
 
 - core 85, openapi-parser 90, snapshot-store 90, registry 85,
   generated-client 95, graphql 85, json-schema 90, cli 80
-- the benchmark module carries no gate (tool module)
+- the benchmark module carries no gate (tool module); the `:fuzz`
+  module has no main sources
 
 `gradlew koverVerify` runs the gate; it is intended for CI (Phase 6
-wires it in) and is reproducible locally.
+wired it in) and is reproducible locally.
 
 ## Rationale
 

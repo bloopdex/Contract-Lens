@@ -72,14 +72,16 @@ jobs:
       - name: Coverage gate (per-module line minimums)
         run: ./gradlew koverVerify --console=plain
 
-      - name: Aggregate coverage report
+      # Per-module reports: the root merge is empty when a source-less
+      # subproject exists (:fuzz) — documented in docs/coverage.md.
+      - name: Coverage reports (per module)
         run: ./gradlew koverXmlReport --console=plain
 
-      - name: Upload the coverage report
+      - name: Upload the coverage reports
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: build/reports/kover/report.xml
+          path: "*/build/reports/kover/report.xml"
 
   security:
     runs-on: ubuntu-latest
