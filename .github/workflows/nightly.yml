@@ -45,7 +45,7 @@ jobs:
           java-version: '17'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: "Long seeded harness sweep (recorded: ~39 min for the parser sweep)"
         run: ./gradlew :cli:fuzz -PfuzzIterations=200000 :core:fuzz -PfuzzIterations=200000 --console=plain
@@ -62,7 +62,7 @@ jobs:
           java-version: '17'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Coverage-guided fuzzing (6 targets, 2 min each)
         run: ./gradlew :fuzz:jazzerFuzz -Pjazzer.fuzz=1 --console=plain
@@ -90,7 +90,7 @@ jobs:
           java-version: '17'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Full benchmark suite + comparison against the committed baseline
         run: .\gradlew.bat :benchmark:benchCheck --console=plain
@@ -117,7 +117,7 @@ jobs:
           java-version: '17'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Full benchmark suite (cross-OS, informational)
         run: ./gradlew :benchmark:benchCheck --console=plain
@@ -141,7 +141,7 @@ jobs:
           java-version: '17'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Reusable-action end-to-end test (pass and block cases)
         shell: pwsh
