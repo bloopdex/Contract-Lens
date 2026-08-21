@@ -13,11 +13,11 @@ dependencies {
     // swagger-core graph. The full parser + fixture suites re-run
     // after the bump; any remaining advisories are handled per the
     // SECURITY.md policy (see docs/security.md).
-    implementation("io.swagger.parser.v3:swagger-parser:2.1.44")
-    implementation("org.yaml:snakeyaml:2.4")
+    implementation("io.swagger.parser.v3:swagger-parser:2.1.46")
+    implementation("org.yaml:snakeyaml:2.6")
 
     testImplementation(project(":core"))
     testImplementation(kotlin("test"))
-    testImplementation("io.kotest:kotest-runner-junit5:5.9.1")
-    testImplementation("io.kotest:kotest-assertions-core:5.9.1")
+    testImplementation("io.kotest:kotest-runner-junit5:6.2.4")
+    testImplementation("io.kotest:kotest-assertions-core:6.2.4")
 }
