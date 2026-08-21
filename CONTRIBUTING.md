@@ -29,6 +29,16 @@ practical expectations.
   in CI; verification metadata is regenerated only after a deliberate,
   reviewed upgrade.
 
+## Before you push
+
+The complete maintainer flow — local gates, CI checks, tagging,
+release verification, and the Dependabot policy — is the
+["Maintainer checklist"](docs/release.md#maintainer-checklist--what-to-check-when-you-push)
+in docs/release.md. In short: local gates green, workflow files
+validated (`python scripts\check-workflows.py`), CI green on the push,
+and red Dependabot PRs are never merged — they are closed or upgraded
+deliberately.
+
 ## Build and verify
 
 ```
