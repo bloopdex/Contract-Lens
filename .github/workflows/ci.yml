@@ -108,7 +108,12 @@ jobs:
         run: ./gradlew assemble --dependency-verification=strict --console=plain
 
       - name: OSV-Scanner (Gradle lockfiles)
-        uses: google/osv-scanner-action@v1
+        # Pinned to an exact tag: this action publishes no moving
+        # major-version tag (`@v1` does not resolve) — the first hosted
+        # security job failed at job setup with "unable to find version v1".
+        # v2 changes the interface (single-lockfile model), so the v1
+        # series is kept deliberately.
+        uses: google/osv-scanner-action@v1.9.2
         with:
           scan-args: |-
             --format=table

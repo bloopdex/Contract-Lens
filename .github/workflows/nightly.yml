@@ -148,7 +148,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: OSV-Scanner (fresh database each night)
-        uses: google/osv-scanner-action@v1
+        # Pinned to an exact tag: the action publishes no moving
+        # major-version tag (see ci.yml's security job for the record).
+        uses: google/osv-scanner-action@v1.9.2
         with:
           scan-args: |-
             --format=table
