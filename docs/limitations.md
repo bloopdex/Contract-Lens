@@ -117,9 +117,9 @@ behind each boundary lives in the cited ADR or doc.
 
 ## Operational
 
-- **CI workflows and release publication execute once the repository
-  is hosted.** Every step is implemented and verified locally
-  (ADR-007); nothing is claimed as published until it is.
+- **The first hosted release is out** (v1.0.0, 2026-08-21, published
+  by the tag-driven workflow; checksum verified against the published
+  artifact). Subsequent releases are the same tag push.
 
 - **The DeployScore feed is a producer-side contract.** The receiving
   service does not exist yet; the emitter is offline by construction

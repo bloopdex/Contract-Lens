@@ -154,9 +154,6 @@ upgrades** (1M parser executions + 200k classifier iterations).
 
 - Symlink-specific handling and permission-edge testing (e.g.
   unreadable files on Windows) remain open follow-ups.
-- The OSV scan and CI jobs execute on the hosted runner once the
-  repository hosting decision lands; the local equivalents have been
-  run and recorded.
 - `review` verdicts shift some security-adjacent judgment (e.g. request
   property removal) to humans — by design, and documented in
   [classification.md](classification.md).

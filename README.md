@@ -183,10 +183,8 @@ The honest list is grouped in [docs/limitations.md](docs/limitations.md):
 local `$ref`s only, core-JSON-Schema vocabulary only, single-file
 GraphQL, no `x-stability-level` exemptions, convention-stable (not
 byte-exact) generated-client projection, the usage graph not wired
-into classification, unregistered consumers invisible, contract
-renames not mapped, and publication of CI/releases pending the
-repository hosting decision. Each limitation states what would remove
-it.
+into classification, unregistered consumers invisible, and contract
+renames not mapped. Each limitation states what would remove it.
 
 ## License
 

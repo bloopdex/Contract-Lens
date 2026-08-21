@@ -91,5 +91,19 @@ was adopted unchanged.
   two clean-checkout builds.
 - Docker: the image builds and a classified diff runs inside the
   container with the correct exit code.
-- Publication remains pending the hosting decision; nothing is claimed
-  as published until it is.
+
+## Amendment (2026-08-21) — first hosted release
+
+The revisit condition ("hosting is decided") fired. The `v1.0.0` tag
+push published the release end-to-end on GitHub Actions: the workflow
+ran the clean build + tests + coverage gate on `windows-latest`,
+verified the bundle checksums, and attached the JAR, `SHA256SUMS`,
+install scripts, CHANGELOG, and LICENSE. The published JAR was then
+downloaded from the release URL and independently verified — SHA-256
+matches `SHA256SUMS`, `--version` reports `1.0.0`. Two repairs were
+needed for the first hosted runs, both recorded: the CI branch
+trigger referenced `main` while the default branch is `master`
+(fixed in the workflow), and `gradlew` was committed without the
+executable bit, which failed every Ubuntu CI job until fixed
+(`chmod +x` recorded in git). The publication decision is now: tag
+pushes publish; nothing else does.

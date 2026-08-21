@@ -43,9 +43,15 @@ The script:
 branches, never PRs) and performs the same steps on CI: strict tag
 verification against the build file, full validation, packaging,
 checksum verification, artifact smoke test, tree-clean check, then
-creates the GitHub Release via `gh`. Publication is pending the
-repository hosting decision — the machinery is complete and locally
-verified; nothing is claimed as published until it is.
+creates the GitHub Release via `gh`.
+
+**First hosted release (2026-08-21):** the `v1.0.0` tag push published
+the release end-to-end on GitHub runners — the workflow ran the clean
+build + tests + coverage gate on `windows-latest`, verified the
+bundle checksums, and attached the JAR, `SHA256SUMS`, install scripts,
+CHANGELOG, and LICENSE. The published JAR was then downloaded from the
+release URL and independently verified: SHA-256 matches `SHA256SUMS`
+and `--version` reports `1.0.0`.
 
 ### Cutting a release
 

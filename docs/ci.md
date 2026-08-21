@@ -1,10 +1,9 @@
 # CI architecture
 
-Three workflows: **CI** (PRs + pushes to master), **Nightly** (scheduled),
-**Release** (tag-driven). Every command in every workflow has been
-executed locally; GitHub execution itself is pending the repo hosting
-decision (the repository hosting is undecided) — the workflows
-run as written once the repository is pushed to a host.
+Three workflows: **CI** (PRs + pushes to master + tag pushes), **Nightly**
+(scheduled), **Release** (tag-driven). All three execute on GitHub
+Actions (first hosted runs 2026-08-21); the first tag push published
+the v1.0.0 release end-to-end.
 
 ## Workflows and triggers
 
@@ -94,12 +93,14 @@ powershell -File scripts\release.ps1 -Version 1.0.0   # release bundle (local)
 
 ## Known CI limitations
 
-- Workflows execute only once the repository is hosted (no remote yet);
-  every command is verified locally with the results recorded in the
-  the delivery record.
-- Dependabot + the GitHub dependency graph activate with hosting; the
-  OSV scan covers the gap locally.
+- Dependabot version updates run on the repository (see
+  [CONTRIBUTING.md](../CONTRIBUTING.md) for the deliberate-upgrade
+  process — every dependency change must regenerate the committed
+  verification metadata).
 - The benchmark FAIL gate is intentionally conservative at ms scale —
   intermediate regressions surface as WARNs and need human eyes.
 - The PR-comment step of the reusable Action is GitHub-runner-only
   (`gh` + `GITHUB_TOKEN`); the analysis core runs identically offline.
+- CI matrix runs are green on both OSes only since the `gradlew`
+  executable-bit fix (2026-08-21) — recorded in the first-hosted-run
+  repair history.

@@ -18,9 +18,9 @@ vulnerability. Please include:
 ## Dependency vulnerability policy
 
 Scanning runs in CI (OSV-Scanner over the Gradle lockfiles, plus
-GitHub's dependency graph once the repository is hosted) and locally
-with the documented docker invocation (see below). Gradle dependency
-resolution integrity is enforced separately with
+GitHub's dependency graph and Dependabot) and locally with the
+documented docker invocation (see below). Gradle dependency resolution
+integrity is enforced separately with
 `--dependency-verification=strict` against the committed
 `gradle/verification-metadata.xml` (SHA-256 of every resolved artifact).
 
