@@ -27,6 +27,11 @@ name: Nightly
 permissions:
   contents: read
 
+# One scheduled run at a time; a manual dispatch supersedes a running one.
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
 jobs:
   fuzz-long:
     runs-on: ubuntu-latest

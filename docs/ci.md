@@ -9,22 +9,24 @@ the v1.0.0 release end-to-end.
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
-| `ci.yml` | PR + push to master + tag push `v*` | build-test (matrix), coverage, security, fuzz-smoke, benchmark-smoke — every version tag runs the full validation matrix |
+| `ci.yml` | PR + push to master + tag push `v*` | **two jobs**: `build-test` (the 2×2 matrix) and `verify` (the remaining gates as sequential steps). One run per ref — a rapid push cancels the in-flight run (`concurrency`) |
 | `nightly.yml` | cron `37 3 * * *` + manual dispatch | fuzz-long, jazzer-fuzz, benchmark (windows, gated), benchmark-ubuntu (informational), action-e2e, osv-scan |
 | `release.yml` | tag push `v*.*.*` ONLY | release (verify tag ↔ version → full validation → package → checksums → smoke → publish) |
 
 ## PR pipeline (all blocking)
 
-| Job | Command | Measured locally | Why blocking |
-|---|---|---|---|
-| build-test | `gradlew build` (JVM 17+21 × linux+windows) | ~2 min cached / fresh build ~4-6 min | the correctness gate: compile + ktlint + all tests (includes the fuzz tasks at default counts and the Jazzer regression replay) |
-| coverage | `gradlew koverVerify koverXmlReport` | ~1-2 min | the coverage gate is policy, not decoration |
-| security | `gradlew assemble --dependency-verification=strict` + OSV-Scanner over the committed lockfiles (policy in `osv-scanner.toml`) | ~20 s + scan | dependency integrity is enforced, not just scanned |
-| fuzz-smoke | `gradlew :cli:fuzz -PfuzzIterations=5000 :core:fuzz -PfuzzIterations=5000 :fuzz:jazzerFuzz` | 1m23s + 30s + 21s | parser invariants on every change |
-| benchmark-smoke | `gradlew :benchmark:benchSmoke` | 7 s | proves the harness still executes; writes nothing |
+The pipeline is deliberately two jobs so the Actions tab stays
+readable: the correctness gate as the compatibility matrix, and every
+other gate as one sequential job — the first failing step stops the
+job and names itself.
 
-Total PR feedback ≈ 5-8 minutes wall-clock (jobs run in parallel;
-Gradle build caching is enabled via setup-gradle).
+| Job | Steps (in order) | Measured locally | Why blocking |
+|---|---|---|---|
+| `build-test` (JVM 17+21 × linux+windows) | compile + ktlint + all tests (`gradlew build`) | ~2 min cached / fresh ~4-6 min | the correctness gate (includes the fuzz tasks at default counts and the Jazzer regression replay) |
+| `verify` (ubuntu) | coverage gate (`koverVerify`) → coverage reports → strict dependency verification → OSV scan → seeded fuzz smoke → Jazzer replay → benchmark smoke | ~5 min total | each step is one recorded gate: coverage is policy, not decoration; dependency integrity is enforced, not just scanned; parser invariants on every change; the harness still executes |
+
+Total PR feedback ≈ 5-8 minutes wall-clock (the two jobs run in
+parallel; Gradle build caching is enabled via setup-gradle).
 
 ## Nightly pipeline
 
@@ -77,7 +79,7 @@ docker run --rm -v "${PWD}:/src" -w /src ghcr.io/google/osv-scanner scan --confi
 .\gradlew.bat :benchmark:benchSmoke
 .\gradlew.bat :benchmark:benchCheck
 powershell -File scripts\test-action.ps1              # action e2e
-powershell -File scripts\release.ps1 -Version 1.0.0   # release bundle (local)
+powershell -File scripts\release.ps1 -Version 1.0.1   # release bundle (local)
 ```
 
 ## Permissions & CI security
@@ -103,4 +105,5 @@ powershell -File scripts\release.ps1 -Version 1.0.0   # release bundle (local)
   (`gh` + `GITHUB_TOKEN`); the analysis core runs identically offline.
 - CI matrix runs are green on both OSes only since the `gradlew`
   executable-bit fix (2026-08-21) — recorded in the first-hosted-run
-  repair history.
+  repair history. First all-green hosted run: 2026-08-21 (8/8 jobs
+  under the pre-consolidation layout).

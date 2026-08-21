@@ -1,7 +1,13 @@
 # Dependency-update automation. Version updates open PRs; every
 # PR runs the full validation pipeline, so an unsafe update cannot land
-# silently. Activates once the repository is hosted (the workflows have
-# the same precondition).
+# silently.
+#
+# All Gradle updates are grouped into ONE weekly PR (not one PR per
+# dependency) so the review surface stays readable. Note (recorded
+# policy): Dependabot cannot regenerate gradle/verification-metadata.xml,
+# so a merged update PR still requires the maintainer to regenerate the
+# metadata and re-verify before the strict CI gate goes green —
+# see CONTRIBUTING.md.
 
 version: 2
 updates:
@@ -10,6 +16,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      gradle-dependencies:
+        patterns:
+          - "*"
 
   - package-ecosystem: github-actions
     directory: "/"
