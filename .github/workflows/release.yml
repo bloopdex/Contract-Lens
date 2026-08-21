@@ -15,9 +15,9 @@
 #
 # Security: `contents: write` is granted to this job only, and only tag
 # pushes (maintainer-only) reach it — untrusted PR workflows never get
-# release credentials (SECURITY.md). Publication is pending the repo
-# hosting decision; the local equivalent (scripts/release.ps1) is
-# executed and verified locally.
+# release credentials (SECURITY.md). This workflow published the
+# v1.0.0 release end-to-end (2026-08-21); the local equivalent
+# (scripts/release.ps1) remains the pre-push verification path.
 
 name: Release
 
