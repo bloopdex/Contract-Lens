@@ -108,12 +108,12 @@ jobs:
         run: ./gradlew assemble --dependency-verification=strict --console=plain
 
       - name: OSV-Scanner (Gradle lockfiles)
-        # Pinned to an exact tag: this action publishes no moving
-        # major-version tag (`@v1` does not resolve) — the first hosted
-        # security job failed at job setup with "unable to find version v1".
-        # v2 changes the interface (single-lockfile model), so the v1
-        # series is kept deliberately.
-        uses: google/osv-scanner-action@v1.9.2
+        # The plain docker invocation, identical to the documented local
+        # command (SECURITY.md): the upstream google/osv-scanner-action
+        # wrapper is deliberately not used — it publishes no moving
+        # major tag, and its v1.9.2 action.yml ships without a `runs:`
+        # section, which fails the job at setup on GitHub's side.
+        run: docker run --rm -v "$PWD:/src" -w /src ghcr.io/google/osv-scanner scan --config=osv-scanner.toml -r .
         with:
           scan-args: |-
             --format=table
