@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
     testImplementation(kotlin("test"))
     testImplementation("io.kotest:kotest-runner-junit5:5.9.1")
