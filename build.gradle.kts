@@ -1,12 +1,12 @@
 plugins {
-    kotlin("jvm") version "2.2.0" apply false
-    kotlin("plugin.serialization") version "2.2.0" apply false
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.2" apply false
+    kotlin("jvm") version "2.4.10" apply false
+    kotlin("plugin.serialization") version "2.4.10" apply false
+    id("org.jlleitschuh.gradle.ktlint") version "14.2.0" apply false
     // Coverage gate: aggregate Kover reports across all modules.
     id("org.jetbrains.kotlinx.kover") version "0.9.9" apply false
     // (ADR-007): the fat JAR is the primary release artifact.
     // 9.4.3 is the latest plugin-portal release for Gradle 9 (min 9.0).
-    id("com.gradleup.shadow") version "9.4.3" apply false
+    id("com.gradleup.shadow") version "9.6.1" apply false
 }
 
 // OSV-scan fixes for the BUILDSRIPT classpath (the subproject
