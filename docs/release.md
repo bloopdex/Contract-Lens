@@ -53,7 +53,7 @@ verified; nothing is claimed as published until it is.
 # bump `version` in build.gradle.kts first — the tag and the build file
 # must agree or both the script and the workflow refuse
 git tag -a v1.0.0 -m "Release v1.0.0"
-git push origin main
+git push origin master
 git push origin v1.0.0          # triggers release.yml once hosted
 ```
 

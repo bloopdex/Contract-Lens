@@ -1,6 +1,6 @@
 # CI architecture
 
-Three workflows: **CI** (PRs + pushes to main), **Nightly** (scheduled),
+Three workflows: **CI** (PRs + pushes to master), **Nightly** (scheduled),
 **Release** (tag-driven). Every command in every workflow has been
 executed locally; GitHub execution itself is pending the repo hosting
 decision (the repository hosting is undecided) — the workflows
@@ -10,7 +10,7 @@ run as written once the repository is pushed to a host.
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
-| `ci.yml` | PR + push to main + tag push `v*` | build-test (matrix), coverage, security, fuzz-smoke, benchmark-smoke — every version tag runs the full validation matrix |
+| `ci.yml` | PR + push to master + tag push `v*` | build-test (matrix), coverage, security, fuzz-smoke, benchmark-smoke — every version tag runs the full validation matrix |
 | `nightly.yml` | cron `37 3 * * *` + manual dispatch | fuzz-long, jazzer-fuzz, benchmark (windows, gated), benchmark-ubuntu (informational), action-e2e, osv-scan |
 | `release.yml` | tag push `v*.*.*` ONLY | release (verify tag ↔ version → full validation → package → checksums → smoke → publish) |
 

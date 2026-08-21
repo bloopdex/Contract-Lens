@@ -1,4 +1,4 @@
-# CI architecture (docs/ci.md) — pull requests, pushes to main,
+# CI architecture (docs/ci.md) — pull requests, pushes to master,
 # and version-tag pushes (a tag runs the full validation matrix;
 # the publication itself runs ONLY in release.yml, which is
 # exclusively tag-triggered). Every job below is BLOCKING; the
@@ -29,7 +29,10 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # The repository's default branch is `master` — pushes there run
+    # the full matrix; version tags run it too (publication itself is
+    # release.yml, exclusively tag-triggered).
+    branches: [master]
     tags: ['v*']
   pull_request:
 
