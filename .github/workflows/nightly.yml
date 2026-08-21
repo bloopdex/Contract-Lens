@@ -69,7 +69,7 @@ jobs:
 
       - name: Upload crash reproducers (on failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jazzer-crash-inputs
           path: |
@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload benchmark results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-results-windows
           path: benchmark/build/benchmark-results.json
@@ -124,7 +124,7 @@ jobs:
 
       - name: Upload benchmark results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-results-ubuntu
           path: benchmark/build/benchmark-results.json
