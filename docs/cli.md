@@ -18,9 +18,9 @@ Requires a JRE 17+.
 ```
 # download contractlens-<version>-all.jar and SHA256SUMS from the release
 # verify first:
-powershell "(Get-FileHash -Algorithm SHA256 contractlens-1.0.0-all.jar).Hash.ToLowerInvariant()"
+powershell "(Get-FileHash -Algorithm SHA256 contractlens-1.0.1-all.jar).Hash.ToLowerInvariant()"
 # compare against the SHA256SUMS line, then:
-java -jar contractlens-1.0.0-all.jar --version
+java -jar contractlens-1.0.1-all.jar --version
 ```
 
 **Install scripts** (from the release bundle): `install.ps1`
@@ -31,8 +31,8 @@ reverses it.
 **Docker**:
 
 ```
-docker build -t contractlens:1.0.0 .
-docker run --rm -v "$PWD:/work" -w /work contractlens:1.0.0 diff \
+docker build -t contractlens:1.0.1 .
+docker run --rm -v "$PWD:/work" -w /work contractlens:1.0.1 diff \
     old.snapshot.json new.snapshot.json --classify
 ```
 

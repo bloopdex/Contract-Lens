@@ -9,7 +9,7 @@
 #       LICENSE
 #
 # Usage:
-#   powershell -ExecutionPolicy Bypass -File scripts\release.ps1 -Version 1.0.0
+#   powershell -ExecutionPolicy Bypass -File scripts\release.ps1 -Version 1.0.1
 #
 # Publication is deliberately NOT part of this script. `dist/` is
 # gitignored: the bundle is generated locally (verification,

@@ -5,6 +5,25 @@ semver per the classifier's own ruleset (breaking → major); releases are
 tag-driven (`vX.Y.Z`) per ADR-007. Known limitations and their revisit
 conditions live in [docs/limitations.md](docs/limitations.md).
 
+## 1.0.1 — hosted CI consolidation & first-hosted-run repairs (2026-08-21)
+
+- CI: the pipeline is consolidated into two jobs — the build/test
+  matrix and one sequential `verify` job (coverage gate → strict
+  dependency verification → OSV scan → fuzz smoke + Jazzer replay →
+  benchmark smoke), with one run per ref (concurrency) so the Actions
+  tab stays readable; the first all-green hosted run executed the
+  full gate set.
+- CI repairs from the first hosted runs: the workflow file YAML
+  error in the nightly pipeline (unquoted colon in a step name), the
+  branch trigger (`master`, not `main`), the `gradlew` executable
+  bit, and the OSV scan step now uses the plain docker invocation
+  instead of an upstream wrapper action whose published tags are
+  broken (no moving major tag; v1.9.2 ships without a `runs:`
+  section).
+- Dependabot: Gradle updates are grouped into one weekly PR (each
+  update still requires the maintainer to regenerate the verification
+  metadata before merge — recorded in CONTRIBUTING.md).
+
 ## 1.0.0 — production delivery & continuous verification (2026-08-21)
 
 - Documentation: the repository now ships the full engineering
