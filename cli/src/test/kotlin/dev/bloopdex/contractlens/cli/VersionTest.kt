@@ -17,7 +17,7 @@ class VersionTest :
     FunSpec({
         test("--version reports the authoritative version from the generated constant") {
             versionLine(arrayOf("--version")) shouldBe "contractlens version $CONTRACTLENS_VERSION"
-            CONTRACTLENS_VERSION shouldBe "0.1.0"
+            CONTRACTLENS_VERSION shouldBe "1.0.0"
         }
 
         test("versionLine ignores every other argument shape") {

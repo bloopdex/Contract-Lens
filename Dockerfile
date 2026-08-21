@@ -4,9 +4,9 @@
 # compare".
 #
 # Build:
-#   docker build -t contractlens:0.1.0 .
+#   docker build -t contractlens:1.0.0 .
 # Run:
-#   docker run --rm -v "$PWD:/work" -w /work contractlens:0.1.0 diff \
+#   docker run --rm -v "$PWD:/work" -w /work contractlens:1.0.0 diff \
 #       old.snapshot.json new.snapshot.json --classify
 
 # syntax=docker/dockerfile:1

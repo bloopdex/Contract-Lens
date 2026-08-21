@@ -1,7 +1,10 @@
-# CI architecture (docs/ci.md) — pull requests and pushes to
-# main. Every job below is BLOCKING; the expensive verification
-# (long fuzz sweeps, coverage-guided fuzzing, full benchmark
-# comparisons, action e2e) runs in nightly.yml.
+# CI architecture (docs/ci.md) — pull requests, pushes to main,
+# and version-tag pushes (a tag runs the full validation matrix;
+# the publication itself runs ONLY in release.yml, which is
+# exclusively tag-triggered). Every job below is BLOCKING; the
+# expensive verification (long fuzz sweeps, coverage-guided
+# fuzzing, full benchmark comparisons, action e2e) runs in
+# nightly.yml.
 #
 # Job split rationale (measured locally, 2026-08-19):
 #   - build+test: the full suite is the correctness gate; the 2x2
@@ -27,6 +30,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
 
 permissions:

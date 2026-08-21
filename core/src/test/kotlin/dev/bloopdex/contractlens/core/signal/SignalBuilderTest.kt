@@ -82,7 +82,7 @@ private fun build(
     impact = impact,
     analysisDurationMs = 12.5,
     analyzedAt = analyzedAt,
-    producerVersion = "0.1.0",
+    producerVersion = "1.0.0",
 )
 
 class SignalBuilderTest :

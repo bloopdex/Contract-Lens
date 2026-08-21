@@ -45,7 +45,7 @@ jobs:
           }
           $tag = $env:GITHUB_REF_NAME
           if ($tag -notmatch '^v\d+\.\d+\.\d+$') {
-            throw "malformed release tag '$tag' - expected vMAJOR.MINOR.PATCH (e.g. v0.1.0)"
+            throw "malformed release tag '$tag' - expected vMAJOR.MINOR.PATCH (e.g. v1.0.0)"
           }
           "VERSION=$($tag.Substring(1))" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "release request: $tag (application version $($tag.Substring(1)))"

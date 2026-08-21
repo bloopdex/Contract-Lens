@@ -5,7 +5,7 @@ semver per the classifier's own ruleset (breaking → major); releases are
 tag-driven (`vX.Y.Z`) per ADR-007. Known limitations and their revisit
 conditions live in [docs/limitations.md](docs/limitations.md).
 
-## Unreleased — production delivery & continuous verification
+## 1.0.0 — production delivery & continuous verification (2026-08-21)
 
 - Documentation: the repository now ships the full engineering
   documentation system — an index, standalone concept docs (canonical

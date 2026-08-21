@@ -20,7 +20,7 @@ One release produces:
 ## The local release script (verification/dogfooding)
 
 ```
-powershell -ExecutionPolicy Bypass -File scripts\release.ps1 -Version 0.1.0
+powershell -ExecutionPolicy Bypass -File scripts\release.ps1 -Version 1.0.0
 ```
 
 The script:
@@ -52,9 +52,9 @@ verified; nothing is claimed as published until it is.
 ```
 # bump `version` in build.gradle.kts first — the tag and the build file
 # must agree or both the script and the workflow refuse
-git tag -a v0.1.0 -m "Release v0.1.0"
+git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin main
-git push origin v0.1.0          # triggers release.yml once hosted
+git push origin v1.0.0          # triggers release.yml once hosted
 ```
 
 Tag deletion/retagging is a maintainer-only decision; automation never
@@ -64,7 +64,7 @@ creates or moves tags.
 
 ```
 # Windows PowerShell
-(Get-FileHash -Algorithm SHA256 contractlens-0.1.0-all.jar).Hash.ToLowerInvariant()
+(Get-FileHash -Algorithm SHA256 contractlens-1.0.0-all.jar).Hash.ToLowerInvariant()
 Get-Content SHA256SUMS   # compare against the line for the jar
 
 # Linux/macOS

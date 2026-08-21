@@ -10,7 +10,7 @@ run as written once the repository is pushed to a host.
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
-| `ci.yml` | PR + push to main | build-test (matrix), coverage, security, fuzz-smoke, benchmark-smoke |
+| `ci.yml` | PR + push to main + tag push `v*` | build-test (matrix), coverage, security, fuzz-smoke, benchmark-smoke — every version tag runs the full validation matrix |
 | `nightly.yml` | cron `37 3 * * *` + manual dispatch | fuzz-long, jazzer-fuzz, benchmark (windows, gated), benchmark-ubuntu (informational), action-e2e, osv-scan |
 | `release.yml` | tag push `v*.*.*` ONLY | release (verify tag ↔ version → full validation → package → checksums → smoke → publish) |
 
@@ -78,7 +78,7 @@ docker run --rm -v "${PWD}:/src" -w /src ghcr.io/google/osv-scanner scan --confi
 .\gradlew.bat :benchmark:benchSmoke
 .\gradlew.bat :benchmark:benchCheck
 powershell -File scripts\test-action.ps1              # action e2e
-powershell -File scripts\release.ps1 -Version 0.1.0   # release bundle (local)
+powershell -File scripts\release.ps1 -Version 1.0.0   # release bundle (local)
 ```
 
 ## Permissions & CI security

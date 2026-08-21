@@ -33,7 +33,7 @@ assigns the consumer to DeployScore itself).
   "format": "contractlens-signal",
   "version": 1,
   "producer": "contractlens",
-  "producerVersion": "0.1.0",
+  "producerVersion": "1.0.0",
   "contract": "example-api",
   "analyzedAt": "2026-08-19T22:10:00Z",
   "old": {"contract": "example-api", "sha": "<40-hex>"},
