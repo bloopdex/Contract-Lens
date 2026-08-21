@@ -114,13 +114,6 @@ jobs:
         # major tag, and its v1.9.2 action.yml ships without a `runs:`
         # section, which fails the job at setup on GitHub's side.
         run: docker run --rm -v "$PWD:/src" -w /src ghcr.io/google/osv-scanner scan --config=osv-scanner.toml -r .
-        with:
-          scan-args: |-
-            --format=table
-            --fail-on-vuln=true
-            --config=osv-scanner.toml
-            -r
-            .
 
   fuzz-smoke:
     runs-on: ubuntu-latest
