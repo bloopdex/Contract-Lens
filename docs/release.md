@@ -45,13 +45,14 @@ verification against the build file, full validation, packaging,
 checksum verification, artifact smoke test, tree-clean check, then
 creates the GitHub Release via `gh`.
 
-**First hosted release (2026-08-21):** the `v1.0.0` tag push published
-the release end-to-end on GitHub runners — the workflow ran the clean
-build + tests + coverage gate on `windows-latest`, verified the
-bundle checksums, and attached the JAR, `SHA256SUMS`, install scripts,
-CHANGELOG, and LICENSE. The published JAR was then downloaded from the
-release URL and independently verified: SHA-256 matches `SHA256SUMS`
-and `--version` reports `1.0.0`.
+**Hosted releases (2026-08-21):** both `v1.0.0` and `v1.0.1` were
+published end-to-end by tag pushes on GitHub runners — the workflow
+runs the clean build + tests + coverage gate on `windows-latest`,
+verifies the bundle checksums, and attaches the JAR, `SHA256SUMS`,
+install scripts, CHANGELOG, and LICENSE. Each published JAR was then
+downloaded from the release URL and independently verified: SHA-256
+matches `SHA256SUMS` and `--version` reports the released version
+(`v1.0.1` is current).
 
 ### Cutting a release
 

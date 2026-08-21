@@ -2,8 +2,8 @@
 
 Three workflows: **CI** (PRs + pushes to master + tag pushes), **Nightly**
 (scheduled), **Release** (tag-driven). All three execute on GitHub
-Actions (first hosted runs 2026-08-21); the first tag push published
-the v1.0.0 release end-to-end.
+Actions (first hosted runs 2026-08-21); tag pushes have published
+v1.0.0 and v1.0.1 end-to-end.
 
 ## Workflows and triggers
 
