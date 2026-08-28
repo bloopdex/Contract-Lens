@@ -68,17 +68,17 @@ dependencies {
     implementation(project(":graphql"))
     implementation(project(":json-schema"))
 
-    implementation("com.github.ajalt.clikt:clikt:5.0.3")
-    implementation("org.slf4j:slf4j-api:2.0.16")
+    implementation("com.github.ajalt.clikt:clikt:5.1.0")
+    implementation("org.slf4j:slf4j-api:2.0.18")
     // logback + the logstash JSON encoder are implementation deps:
     // the CLI sets the log level and emits structured kv events directly.
-    implementation("ch.qos.logback:logback-classic:1.5.18")
-    implementation("net.logstash.logback:logstash-logback-encoder:8.1")
+    implementation("ch.qos.logback:logback-classic:1.6.3")
+    implementation("net.logstash.logback:logstash-logback-encoder:9.0")
 
     testImplementation(kotlin("test"))
-    testImplementation("io.kotest:kotest-runner-junit5:5.9.1")
-    testImplementation("io.kotest:kotest-assertions-core:5.9.1")
-    testImplementation("com.github.ajalt.clikt:clikt:5.0.3")
+    testImplementation("io.kotest:kotest-runner-junit5:6.2.4")
+    testImplementation("io.kotest:kotest-assertions-core:6.2.4")
+    testImplementation("com.github.ajalt.clikt:clikt:5.1.0")
 }
 
 // Fuzz suites: the same fuzz tests as the normal run, with a
