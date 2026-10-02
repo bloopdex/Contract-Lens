@@ -38,8 +38,8 @@ dependencies {
     // and runs under the root's useJUnitPlatform() configuration. The
     // API (FuzzedDataProvider) is not exposed transitively at compile
     // time and is declared explicitly.
-    testImplementation("com.code-intelligence:jazzer-junit:0.23.0")
-    testImplementation("com.code-intelligence:jazzer-api:0.23.0")
+    testImplementation("com.code-intelligence:jazzer-junit:0.30.0")
+    testImplementation("com.code-intelligence:jazzer-api:0.30.0")
 }
 
 // Regression mode by default (the PR gate); coverage-guided fuzzing
